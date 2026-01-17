@@ -152,7 +152,7 @@ with bottom():
             justify-content: space-around;
             align-items: center;
             background: white;
-            padding: 10px 0;
+            padding: 0 0;
             border-top: 1px solid #eee;
             width: 100%;
         }

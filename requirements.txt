@@ -6,3 +6,5 @@ fpdf2>=2.7.0
 # torch  <-- We avoid specifying torch here to prevent conflict with pre-installed version on ModelScope
 
 streamlit-antd-components>=0.3.0
+st-click-detector
+streamlit-extras

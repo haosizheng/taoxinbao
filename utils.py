@@ -449,7 +449,7 @@ def generate_case_brief_pdf(content, images=None, filename="case_brief.pdf"):
         pdf.set_font('SourceHanSansSC', '', 12)
     except Exception as e:
         pdf.set_font("Arial", size=12)
-        pdf.cell(0, 10, "Error: Chinese font not found.", 0, 1)
+        pdf.cell(0, 10, "错误：未找到中文字体。", 0, 1)
 
     # 1. Title
     pdf.set_font('SourceHanSansSC', '', 18)

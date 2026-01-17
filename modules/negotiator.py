@@ -92,7 +92,7 @@ def render(case, token):
         
         st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
         if st.button("🚀 生成主动催款话术", type="primary", use_container_width=True, key="initiate_btn"):
-            if not token: st.error("请去【我的】配置 Token")
+            if not token: st.error("请去【我的】配置 API 密钥")
             else:
                 with st.spinner("老张正在斟酌语气..."):
                     sys_prompt = utils.PROMPTS.get("negotiator_initiate_template", "")
@@ -181,7 +181,7 @@ def render(case, token):
         # But click_detector is enough.
         
         if clicked == "analyze_trigger":
-            if not token: st.error("请去【我的】配置 Token")
+            if not token: st.error("请去【我的】配置 API 密钥")
             elif not user_txt: st.toast("请输入或录入内容")
             else:
                 with st.spinner("老张正在分析套路..."):

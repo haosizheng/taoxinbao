@@ -30,9 +30,9 @@ def render(case, token):
     if uploaded:
         st.image(uploaded, caption=[f"图{i}" for i in range(len(uploaded))], width=80)
         
-        if st.button("🔍 提取要素 (消耗 Token)"):
+        if st.button("🔍 智能提取要素"):
             if not token:
-                st.error("请先在【个人中心】配置 API Token 以使用智能提取功能。")
+                st.error("请先在【个人中心】配置 API 密钥以使用智能提取功能。")
             else:
                 with st.spinner("正在调用 Qwen-VL 分析图片..."):
                     # 1. Save temp files
@@ -106,9 +106,9 @@ def render(case, token):
         dt = c2.text_input("欠款时间/期限", value=ev_data.get("date", d.get("date","")), key="arch_date", placeholder="2023年全年")
     
     # 2. AI Generation Trigger
-    if st.button("🤖 智能生成告知书内容 (AI Generate)", type="primary"):
+    if st.button("🤖 智能生成告知书内容", type="primary"):
         if not token:
-            st.warning("请先配置 API Token")
+            st.warning("请先配置 API 密钥")
         else:
             with st.spinner("正在撰写专业的法律告知书..."):
                 # Prepare Prompt
@@ -127,7 +127,7 @@ def render(case, token):
                     else:
                         st.error(res)
                 else:
-                    st.error("Missing Prompt Config")
+                    st.error("系统错误：缺失提示词配置。")
 
     # 3. Editor & Download
     # Load draft from session state or default empty
@@ -138,7 +138,7 @@ def render(case, token):
     final_content = st.text_area("告知书内容预览 (可修改)", value=default_draft, height=400)
     
     # 4. Generate PDF
-    if st.button("⬇️ 生成并下载 PDF (Download)"):
+    if st.button("⬇️ 生成并下载 PDF"):
         if not final_content:
             st.warning("请先生成内容或手动输入内容。")
         else:

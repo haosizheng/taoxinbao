@@ -250,8 +250,8 @@ def render(case, token):
                         st.rerun()
                             
     st.divider()
-    with st.expander("⚙️ 设置 Token"):
-        val = st.text_input("ModelScope Token", type="password", key="custom_api_key")
+    with st.expander("⚙️ 设置 API 密钥"):
+        val = st.text_input("ModelScope 密钥", type="password", key="custom_api_key")
         if val: st.success("已更新")
         st.caption(f"当前: {token[:8]}..." if token else "未配置")
 

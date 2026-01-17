@@ -14,7 +14,7 @@ def render(case, token):
         
         if st.button("开始生成", type="primary"):
             if not token:
-                st.error("请先配置 API Token")
+                st.error("请先配置 API 密钥")
             else:
                 with st.spinner("AI 正在阅读您的案件资料..."):
                     # 1. Gather Context

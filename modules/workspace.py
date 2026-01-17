@@ -17,7 +17,7 @@ def render(case, token):
         # Custom Back Button Header
         c_back, c_title = st.columns([1, 4])
         with c_back:
-            if st.button("↩", key="exit_ws_btn"):
+            if st.button("返回", key="exit_ws_btn", icon=":material/arrow_back:"):
                 st.session_state.app_mode = "RECOVERY"
                 st.rerun()
         with c_title:

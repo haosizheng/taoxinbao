@@ -8,7 +8,7 @@ import re
 def render(case, token):
     d = case["dossier"]
     
-    st.subheader("📄 告知书")
+    utils.render_header_with_icon("archivist", "告知书")
     
     # Hack to translate File Uploader
     st.markdown("""
@@ -30,7 +30,7 @@ def render(case, token):
     if uploaded:
         st.image(uploaded, caption=[f"图{i}" for i in range(len(uploaded))], width=80)
         
-        if st.button("🔍 智能提取要素"):
+        if st.button("智能提取要素"):
             if not token:
                 st.error("请先在【个人中心】配置 API 密钥以使用智能提取功能。")
             else:
@@ -87,7 +87,7 @@ def render(case, token):
     
     # --- Content Generation Section ---
     st.markdown("---")
-    st.subheader("📝 告知书生成")
+    utils.render_header_with_icon("robot", "告知书生成")
     
     # 1. Basic Info Inputs (Pre-filled)
     ev_data = case.get("evidence_data", {})
@@ -105,55 +105,59 @@ def render(case, token):
         am = c1.text_input("欠款金额(元)", value=ev_data.get("amount", d.get("amount","")), key="arch_amount", placeholder="8000")
         dt = c2.text_input("欠款时间/期限", value=ev_data.get("date", d.get("date","")), key="arch_date", placeholder="2023年全年")
     
-    # 2. AI Generation Trigger
-    if st.button("🤖 智能生成告知书内容", type="primary"):
-        if not token:
-            st.warning("请先配置 API 密钥")
-        else:
-            with st.spinner("正在撰写专业的法律告知书..."):
-                # Prepare Prompt
-                summary = ev_data.get("summary", "无额外证据，仅基于欠款事实。")
-                prompt_tpl = utils.PROMPTS.get("notice_letter_generator_prompt", "")
-                
-                if prompt_tpl:
-                    full_prompt = prompt_tpl.format(
-                        u_name=un, debtor=db, amount=am, date=dt, summary=summary
-                    )
-                    # Call API
-                    res = utils.call_qwen_max(full_prompt, api_key=token)
-                    if "Error" not in res and "API Error" not in res:
-                         st.session_state[f"letter_draft_{case['id']}"] = res
-                         st.toast("生成的真不错！快看看⬇️")
-                    else:
-                        st.error(res)
-                else:
-                    st.error("系统错误：缺失提示词配置。")
-
-    # 3. Editor & Download
-    # Load draft from session state or default empty
+    # 2. Editor Section
     draft_key = f"letter_draft_{case['id']}"
     default_draft = st.session_state.get(draft_key, "")
+    final_content = st.text_area("告知书内容预览 (可手动修改)", value=default_draft, height=400)
     
-    # Text Editor
-    final_content = st.text_area("告知书内容预览 (可修改)", value=default_draft, height=400)
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
     
-    # 4. Generate PDF
-    if st.button("⬇️ 生成并下载 PDF"):
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("智能生成内容", type="primary", use_container_width=True):
+            if not token:
+                st.warning("请先配置 API 密钥")
+            else:
+                with st.spinner("正在撰写专业的法律告知书..."):
+                    summary = ev_data.get("summary", "无额外证据，仅基于欠款事实。")
+                    prompt_tpl = utils.PROMPTS.get("notice_letter_generator_prompt", "")
+                    
+                    if prompt_tpl:
+                        full_prompt = prompt_tpl.format(
+                            u_name=un, debtor=db, amount=am, date=dt, summary=summary
+                        )
+                        res = utils.call_qwen_max(full_prompt, api_key=token)
+                        if "Error" not in res and "API Error" not in res:
+                             st.session_state[draft_key] = res
+                             st.rerun()
+                        else:
+                            st.error(res)
+                    else:
+                        st.error("系统错误：缺失提示词配置。")
+    
+    with col2:
         if not final_content:
-            st.warning("请先生成内容或手动输入内容。")
+            st.button("⬇️ 生成并下载 PDF", disabled=True, use_container_width=True, help="请先生成或输入内容")
         else:
-            data = {"debtor": db, "amount": am, "date": dt, "u_name": un} # Still passed for metadata if needed
-            pdf_path = utils.generate_pdf(data, content=final_content)
-            
-            # Persist data
-            case["evidence_data"].update(data)
-            
-            with open(pdf_path, "rb") as f:
+            # Prepare PDF bytes on the fly
+            data_pdf = {"debtor": db, "amount": am, "date": dt, "u_name": un}
+            try:
+                pdf_path = utils.generate_pdf(data_pdf, content=final_content)
+                # Persist basic data too
+                case["evidence_data"].update(data_pdf)
+                
+                with open(pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
+                
                 st.download_button(
-                    label="点击保存文件",
-                    data=f,
-                    file_name="正式告知书.pdf",
-                    mime="application/pdf"
+                    label="⬇️ 下载 PDF 文件",
+                    data=pdf_bytes,
+                    file_name=f"正式告知书_{un}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
                 )
-            
-            st.success("文件已生成！")
+            except Exception as e:
+                st.error(f"PDF 生成失败: {e}")
+
+    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)

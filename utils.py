@@ -8,8 +8,9 @@ import io
 import time
 import requests
 from pydub import AudioSegment
-import dashscope
-from dashscope.audio.asr import Transcription
+from pydub import AudioSegment
+from aliyunsdkcore.client import AcsClient
+from aliyunsdkcore.request import CommonRequest
 
 def inject_custom_css():
     st.markdown("""
@@ -242,21 +243,44 @@ def call_qwen_max(prompt, system_prompt=None, api_key=None):
     except Exception as e:
         return f"API Error: {str(e)}"
 
-def transcribe_audio_dashscope(audio_bytes):
-    """
-    Transcribe audio bytes using DashScope SenseVoice model.
-    This replaces the previous NLS Token-based ASR.
-    Supports local bytes processing.
-    """
-    # Prefer DASHSCOPE_API_KEY, fallback to MODELSCOPE_ACCESS_TOKEN
-    api_key = os.getenv("DASHSCOPE_API_KEY") or st.secrets.get("DASHSCOPE_API_KEY") or os.getenv("MODELSCOPE_ACCESS_TOKEN") or load_local_token()
-    
-    if not api_key:
-        return "Error: DASHSCOPE_API_KEY not found."
+def get_alibaba_asr_token(ak_id, ak_secret):
+    """Get temporary token for Alibaba Cloud NLS service using classic stable SDK."""
+    client = AcsClient(ak_id, ak_secret, "cn-shanghai")
+    request = CommonRequest()
+    request.set_domain("nls-meta.cn-shanghai.aliyuncs.com")
+    request.set_version("2019-02-28")
+    request.set_action_name("CreateToken")
+    request.set_protocol_type('https')
+    request.set_accept_format('json')
+    try:
+        response = client.do_action_with_exception(request)
+        j = json.loads(response)
+        if "Token" in j:
+            return j["Token"]["Id"]
+        else:
+            print(f"Alibaba API error response: {j}")
+            return None
+    except Exception as e:
+        print(f"Alibaba Token classic SDK error: {e}")
+        return None
 
-    dashscope.api_key = api_key
+def transcribe_audio_alibaba(audio_bytes):
+    """
+    Transcribe audio bytes utilizing Alibaba Cloud NLS REST API (Short Sentence Recognition).
+    Normalizes audio to 16kHz WAV format first.
+    """
+    ak_id = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID") or st.secrets.get("ALIBABA_CLOUD_ACCESS_KEY_ID")
+    ak_secret = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET") or st.secrets.get("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
+    app_key = os.getenv("ALIBABA_CLOUD_APP_KEY") or st.secrets.get("ALIBABA_CLOUD_APP_KEY")
     
-    # 1. Normalize Audio (SenseVoice is robust, but 16kHz WAV is standard)
+    if not all([ak_id, ak_secret, app_key]):
+        return "Error: Alibaba Cloud credentials (AK_ID, AK_Secret, APP_KEY) not found in environment or st.secrets."
+    
+    token = get_alibaba_asr_token(ak_id, ak_secret)
+    if not token:
+        return "Error: Failed to obtain Alibaba ASR token. Check permissions (AliyunNLSFullAccess)."
+    
+    # 1. Normalize Audio (16k 16bit mono WAV)
     try:
         audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
         audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
@@ -266,33 +290,20 @@ def transcribe_audio_dashscope(audio_bytes):
     except Exception as e:
         return f"Audio Processing Error: {e}"
 
-    # 2. Call SenseVoice (Non-streaming for simplicity in this demo)
+    # 2. Call Alibaba ASR REST API
+    url = f"http://nls-gateway-cn-shanghai.aliyuncs.com/stream/v1/asr?appkey={app_key}"
+    headers = {
+        "X-NLS-Token": token,
+        "Content-Type": "application/octet-stream"
+    }
+    
     try:
-        # Save temp file for DashScope local file upload support
-        temp_filename = f"temp_voice_{int(time.time())}.wav"
-        with open(temp_filename, "wb") as f:
-            f.write(processed_data)
-        
-        task_response = dashscope.audio.asr.Transcription.call(
-            model='sensevoice-v1',
-            file_urls=[f"file://{os.path.abspath(temp_filename)}"],
-            language_hints=['zh', 'en']
-        )
-        
-        # Cleanup
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
-            
-        if task_response.status_code == 200:
-            # SenseVoice returns a list of results
-            results = task_response.output.get('results', [])
-            if results:
-                # Get the transcription from the first file
-                return results[0].get('transcription', "")
-            return "Error: No transcription result found."
+        res = requests.post(url, headers=headers, data=processed_data)
+        res_json = res.json()
+        if res_json.get("status") == 20000000:
+            return res_json.get("result", "")
         else:
-            return f"ASR Error: {task_response.message}"
-            
+            return f"ASR Error: {res_json.get('message', 'Unknown error code: ' + str(res_json.get('status')))}"
     except Exception as e:
         return f"ASR Request Error: {e}"
 

@@ -45,7 +45,7 @@ def render(case, token):
             if audio_val:
                 with st.spinner("老张正在听..."):
                     audio_bytes = audio_val.read()
-                    user_txt = utils.transcribe_audio_dashscope(audio_bytes)
+                    user_txt = utils.transcribe_audio_alibaba(audio_bytes)
                 
                 if user_txt.startswith("Error") or user_txt.startswith("ASR Error"):
                     st.error(user_txt)

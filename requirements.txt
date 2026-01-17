@@ -8,5 +8,5 @@ fpdf2>=2.7.0
 streamlit-antd-components>=0.3.0
 st-click-detector
 streamlit-extras
+aliyun-python-sdk-core
 pydub
-dashscope

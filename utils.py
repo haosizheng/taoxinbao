@@ -10,9 +10,10 @@ def inject_custom_css():
         <style>
             /* 1. Global Reset & Fonts */
             .stApp {
-                background-color: #F5F7FA; /* Light Grey Background */
-                color: #333333; /* Force Dark Text */
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+                background-color: #e0e0e0; /* Desktop Background: Neural Grey */
+                background-image: linear-gradient(#e0e0e0, #cfcfcf);
+                color: #333333;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             }
             
             /* 2. Hide Streamlit Branding */
@@ -20,25 +21,31 @@ def inject_custom_css():
             footer {visibility: hidden;}
             header {visibility: hidden;} 
             
-            /* 3. Mobile Viewport Optimization */
+            /* 3. Mobile Viewport Simulation (The "Phone") */
             ::-webkit-scrollbar {
                 display: none;
             }
+            
             .block-container {
-                padding-top: 2rem !important;
-                padding-bottom: 90px !important; /* Space for fixed bottom sac nav */
-                max-width: 500px !important; /* Force Mobile Width */
-                margin: auto;
-                background-color: transparent; /* Transparent to show body grey */
+                max-width: 500px !important;
+                padding-top: 20px !important; /* Navbar height */
+                padding-bottom: 120px !important; /* Bottom Nav height */
+                margin: 0 auto !important;
+                
+                /* Phone Screen Look */
+                background-color: #F5F7FA;
                 min-height: 100vh;
+                box-shadow: 0 0 30px rgba(0,0,0,0.1); 
             }
             
-            /* Fixed Navbar */
+            /* Fixed Top Navbar - Constrained to Phone Width */
             .custom-navbar {
                 position: fixed;
                 top: 0;
-                left: 0;
+                left: 50%;
+                transform: translateX(-50%);
                 width: 100%;
+                max-width: 500px; /* Constrain */
                 height: 50px;
                 background-color: white;
                 z-index: 999;
@@ -51,23 +58,13 @@ def inject_custom_css():
                 color: #333;
             }
             
-            /* Adjust content to avoid overlap */
-            .block-container {
-                padding-top: 60px !important; /* Navbar height + padding */
-                padding-bottom: 75px !important; 
-                max-width: 500px !important;
-                margin: auto;
-                background-color: transparent;
-                min-height: 100vh;
-            }
-            
             /* Marquee Effect for Header */
             .marquee-container {
                 width: 100%;
                 overflow: hidden;
                 white-space: nowrap;
                 box-sizing: border-box;
-                text-align: center; /* Default center if not overflowing */
+                text-align: center; 
             }
             
             .marquee-text {
@@ -76,38 +73,27 @@ def inject_custom_css():
                 animation: marquee 10s linear infinite;
             }
             
-            /* Only animate if class "animate" is applied or always? 
-               Note: Hard to detect overflow in pure CSS without JS. 
-               We will apply animation conditionally via Python logic if len > X.
-            */
             @keyframes marquee {
                 0%   { transform: translate(0, 0); }
                 100% { transform: translate(-100%, 0); }
             }
             
-            /* Variant: Scrolling back and forth might be better */
-            .scroll-text {
-                /* Simple implementation */
-            }
-            
-            /* ... omitted center bottom ... */
-            /* ... omitted center bottom ... */
+            /* Fixed Bottom Nav - Constrained to Phone Width */
             div[data-testid="stBottom"] {
                 position: fixed;
                 bottom: 0;
-                left: 0;
-                right: 0;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
                 width: 100%;
-                z-index: 999999; /* Highest priority */
-                background-color: white; /* Ensure non-transparent */
+                max-width: 500px; /* Constrain */
+                z-index: 999999;
+                background-color: transparent; /* Container is transparent, child is white */
             }
             
             div[data-testid="stBottom"] > div {
-                max-width: 500px;
-                margin: 0 auto;
-                left: 50% !important;
-                transform: translateX(-50%) !important;
-                padding-bottom: 20px; /* Safe area for modern phones */
+                background-color: white; /* The actual nav bar bg */
+                padding-bottom: 0px;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             }
 
             /* 4. Card Style for Containers (Native st.container(border=True)) */
@@ -158,7 +144,7 @@ def inject_custom_css():
         .orange-banner {
             background-color: #E88349;
             color: white;
-            padding: 1.2rem;
+            padding: .5rem;
             border-radius: 12px;
             margin-bottom: 2rem;
             box-shadow: 0 4px 10px rgba(232, 131, 73, 0.2);

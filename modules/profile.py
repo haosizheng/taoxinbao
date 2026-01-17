@@ -29,6 +29,33 @@ def render(case, token):
         
         st.markdown("---")
         
+        # Case Management
+        st.subheader("📂 档案管理")
+        if not st.session_state.get("cases"):
+            st.caption("暂无档案")
+        else:
+            # Iterate backwards to avoid index shifting issues during deletion if we were popping by index,
+            # though standard reruns handle state refresh. Using keys is safer.
+            # We copy list to avoid runtime modification issues during iteration if not careful, 
+            # though streamlit rerun interrupts execution anyway.
+            for c in st.session_state.cases:
+                with st.container(border=True):
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        d = c['dossier']
+                        st.write(f"**{d.get('boss', '未知老板')}**")
+                        st.caption(f"欠薪: {d.get('amount', '0')}元 | {d.get('date', '未填日期')}")
+                    with col2:
+                        # Delete Button
+                        if st.button("🗑️", key=f"del_{c['id']}", help="删除此档案"):
+                            st.session_state.cases.remove(c)
+                            # If we deleted the active case, reset active ID
+                            if st.session_state.get("active_case_id") == c['id']:
+                                st.session_state.active_case_id = None
+                            st.rerun()
+                            
+        st.markdown("---")
+        
         # Action Buttons Row
         c1, c2 = st.columns(2)
         with c1:
@@ -38,11 +65,7 @@ def render(case, token):
             if st.button("⚠️ 免责声明", use_container_width=True):
                 show_disclaimer()
                 
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        if st.button("🗑️ 退出并清除所有数据", type="primary", use_container_width=True):
-            st.session_state.clear()
-            st.rerun()
+
             
         st.divider()
         with st.expander("⚙️ 设置 Token"):

@@ -54,7 +54,7 @@ def inject_custom_css():
             /* Adjust content to avoid overlap */
             .block-container {
                 padding-top: 60px !important; /* Navbar height + padding */
-                padding-bottom: 90px !important; 
+                padding-bottom: 75px !important; 
                 max-width: 500px !important;
                 margin: auto;
                 background-color: transparent;

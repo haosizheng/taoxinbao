@@ -22,7 +22,7 @@ def render():
     
     # 3. My Cases
     with st.container(border=True):
-        st.subheader("📂 我的案卷 (My Cases)")
+        st.subheader("📂 我的维权案卷")
         if not st.session_state.cases:
             # Empty State
             st.info("暂无记录，请点击下方按钮开始维护您的权益。")
@@ -49,7 +49,6 @@ def render():
                             st.rerun()
 
     # 4. Start New Case Button (Large, Red)
-    st.markdown("<br>", unsafe_allow_html=True) # Spacing
     if st.button("新建维权档案", type="primary", use_container_width=True):
         st.session_state.app_mode = "WIZARD"
         st.session_state.wizard_step = 1

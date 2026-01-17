@@ -75,15 +75,12 @@ from streamlit_extras.bottom_container import bottom
 with bottom():
     # Determine default index
     default_idx = 0
-    if st.session_state.app_mode == "WORKSPACE":
+    if st.session_state.app_mode == "PROFILE":
         default_idx = 1
-    elif st.session_state.app_mode == "PROFILE":
-        default_idx = 2
-
+        
     selected_nav = sac.tabs(
         [
             sac.TabsItem(label='首页', icon='house'),
-            sac.TabsItem(label='讨薪', icon='folder-open'),
             sac.TabsItem(label='我的', icon='person-circle'),
         ],
         align='center', 
@@ -96,11 +93,8 @@ with bottom():
     )
 
 # Logic to handle nav changes
-if selected_nav == '首页' and st.session_state.app_mode not in ["HOME", "WIZARD"]:
+if selected_nav == '首页' and st.session_state.app_mode == "PROFILE":
     st.session_state.app_mode = "HOME"
-    st.rerun()
-elif selected_nav == '讨薪' and st.session_state.app_mode != "WORKSPACE":
-    st.session_state.app_mode = "WORKSPACE"
     st.rerun()
 elif selected_nav == '我的' and st.session_state.app_mode != "PROFILE":
     st.session_state.app_mode = "PROFILE"

@@ -181,23 +181,23 @@ def render():
             st.toast("请先建立档案 📂")
         else:
             # Navigation Logic
-            nav_map = {
-                "找话说": "话术咨询",
-                "存证据": "生成告知书",
-                "出公函": "生成告知书",
-                "找援助": "律师顾问"
+            # Map feature to specific module view
+            nav_view_map = {
+                "找话说": "negotiator",
+                "存证据": "archivist",
+                "出公函": "archivist",
+                "找援助": "lawyer"
             }
             
             active_case = st.session_state.cases[0]
-            target_tab = nav_map.get(clicked, '话术咨询')
+            target_view = nav_view_map.get(clicked, "negotiator")
             
             # Update Session State
             st.session_state.active_case_id = active_case['id']
             st.session_state.app_mode = "WORKSPACE"
-            st.session_state["main_nav_bar"] = "讨薪"
+            # st.session_state["main_nav_bar"] = "讨薪" # REMOVE
             
-            # Pre-select Workspace Tab
-            tab_key = f"workspace_tabs_{active_case['id']}"
-            st.session_state[tab_key] = target_tab
+            # Set the Single-Task View
+            st.session_state.workspace_view = target_view
             
             st.rerun()

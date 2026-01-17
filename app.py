@@ -157,17 +157,18 @@ with bottom():
             justify-content: space-around;
             align-items: center;
             background: white;
-            padding-top: 8px;
-            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+            padding-top: 10px;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
             border-top: 1px solid #F1F3F5; 
             width: 100%;
-            height: auto;
+            height: 100%;
+            box-sizing: border-box;
         }
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             text-decoration: none;
             cursor: pointer;
             width: 33%;
@@ -206,8 +207,9 @@ with bottom():
     </div>
     """
 
-    # Render
-    clicked_nav = click_detector(html, key="bottom_nav_click")
+    # Render - Explicitly set height to avoid the bottom gap
+    # height=65 is enough for icons + text + safe area
+    clicked_nav = click_detector(html, key="bottom_nav_click_v5")
 
     # Handle Navigation
     if clicked_nav == "nav_home" and not is_home:

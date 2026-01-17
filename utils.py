@@ -18,7 +18,7 @@ def inject_custom_css():
             /* 1. Global Reset & Fonts */
             /* 1. Global Reset & Fonts */
             .stApp {
-                background-color: #e0e0e0 !important; /* Stable Neural Grey */
+                background-color: #F8F9FA !important; /* Synced with mobile surface */
                 color: #333333;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             }
@@ -39,22 +39,18 @@ def inject_custom_css():
                 overflow: visible !important;
             }
 
+            /* 4. The Central "Mobile Surface" */
             .block-container, div[data-testid="stMainBlockContainer"] {
                 max-width: 500px !important;
                 padding-top: 20px !important;
-                padding-bottom: 200px !important; 
-                margin: 0 auto !important;
-                width: 100% !important;
-                
-                /* Premium Mobile App Surface */
-                background-color: #F8F9FA !important; 
-                position: relative;
-                display: flex !important;
-                flex-direction: column !important;
+                padding-bottom: 50px !important;
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+                background-color: #F8F9FA !important; /* Fully synced with .stApp */
                 min-height: 100vh !important;
-                height: auto !important;
-                overflow: visible !important;
-                box-shadow: 0 0 30px rgba(0,0,0,0.05); 
+                box-shadow: 0 0 40px rgba(0,0,0,0.05);
+                margin: auto;
+                border: 0.5px solid rgba(0,0,0,0.1);
             }
             
             /* Fixed Top Navbar - Constrained to Phone Width */
@@ -124,9 +120,10 @@ def inject_custom_css():
             }
 
             /* Custom fix for the click_detector iframe parent */
-            div[data-testid="stElementContainer"] iframe {
-                display: block; /* Remove inline whitespace */
-                vertical-align: bottom;
+            div[data-testid="stBottom"] iframe {
+                height: 85px !important;
+                display: block !important;
+                vertical-align: bottom !important;
             }
 
             /* 5. Modern Input Fields (Search-bar style) - Single Border Fix */

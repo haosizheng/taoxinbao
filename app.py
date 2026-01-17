@@ -1,4 +1,3 @@
-
 import streamlit as st
 import utils
 import os
@@ -8,240 +7,203 @@ st.set_page_config(
     page_title="Salary Shield 薪盾",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # Default collapsed for mobile feel
 )
 
-# Sidebar Navigation
-st.sidebar.title("🛡️ Salary Shield 薪盾")
-st.sidebar.markdown("---")
-page = st.sidebar.radio(
-    "功能导航",
-    ["主页", "1. 沟通博弈 (Negotiator)", "2. 证据 & 告知书 (Archivist)", "3. 公益导航 & 律师 (Lighthouse)"]
-)
+# Initialize Session State
+if "evidence_data" not in st.session_state:
+    st.session_state.evidence_data = {}
+if "case_file" not in st.session_state:
+    st.session_state.case_file = {}
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+    st.session_state.messages.append({"role": "assistant", "content": "您好，我是薪盾平台的公益援助律师。请问遇到了什么法律问题？"})
+if "user_info" not in st.session_state:
+    st.session_state.user_info = {"name": "张伟", "id": "U-8823102", "credits": 100}
 
-st.sidebar.markdown("---")
-st.sidebar.caption("赋能劳动者，让维权更简单。")
-st.sidebar.caption("Powered by Qwen-3 & ModelScope")
+# Helper to load token
+def get_api_token():
+    # Priority: Session State (Settings) > Chat Input > Env > Local Config
+    if "custom_api_key" in st.session_state and st.session_state.custom_api_key:
+        return st.session_state.custom_api_key
+    return os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
 
-# Main Content
-if page == "主页":
-    st.title("🛡️ Salary Shield 薪盾")
-    st.markdown("""
-    ### 您的私人 AI 法律顾问
-    
-    我们为您提供一站式的讨薪支持：
-    
-    1. **沟通博弈**: 老板推诿不给钱？AI (Qwen-3) 帮您生成高情商回复。
-    2. **证据存证**: 自动识别聊天截图，一键生成法律告知书 (Qwen-VL)。
-    3. **公益导航**: 连接模拟律师与线下维权机构，让您不再孤单。
-    
-    👈 请在左侧选择功能开始使用。
-    """)
+# --- Main Mobile Layout ---
+st.title("🛡️ 薪盾 Salary Shield")
 
-elif page == "1. 沟通博弈 (Negotiator)":
-    st.header("💬 沟通博弈模块")
-    st.markdown("---")
-    
-    # API Key Configuration
-    # Try to load from env first, else ms_deploy.json, else ask user
-    env_token = os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
-    api_key = st.sidebar.text_input("ModelScope Token (自动读取配置)", value=env_token if env_token else "", type="password")
+# Use Tabs for Bottom Navigation Simulation (Top Tabs are standard in Streamlit)
+# Order: 话术 (Negotiator) | 告知书 (Archivist) | 律师 (Lawyer) | 我的 (Profile)
+tab1, tab2, tab3, tab4 = st.tabs(["💬 话术咨询", "📄 生成告知书", "⚖️ 律师服务", "👤 个人中心"])
+
+# --- Tab 1: Negotiator ---
+with tab1:
+    st.caption("智能分析老板心理，生成高情商回复")
     
     # Input Area
-    st.subheader("1. 录入老板的回复")
-    input_method = st.radio("选择输入方式", ["🎤 语音录入", "📝 文字粘贴"], horizontal=True)
+    input_method = st.radio("输入方式", ["🎤 语音录入", "📝 文字粘贴"], horizontal=True, label_visibility="collapsed")
     
     user_input_text = ""
-    
     if input_method == "🎤 语音录入":
-        audio_value = st.audio_input("按住录音 (或上传音频)")
+        audio_value = st.audio_input("按住录音")
         if audio_value:
-            st.warning("⚠️ 注意：当前语音转文字功能暂未对接实时 API (需 Paraformer)，请使用文字粘贴测试核心逻辑，或等待语音模块更新。")
-            st.info("（模拟）语音识别中...")
+            st.warning("⚠️ 模拟语音识别中... (暂未对接 Paraformer)")
             user_input_text = "老板说最近工程款还没到账，让我再等等，下个月一定给。"
-            st.text_area("识别结果：", value=user_input_text, height=100)
-            
+            st.info(f"识别结果：{user_input_text}")
     else:
-        user_input_text = st.text_area("直接粘贴老板发来的文字", height=150, placeholder="例如：兄弟，不是我不给，是上面没拨款啊...")
+        user_input_text = st.text_area("粘贴老板发来的文字", height=120, placeholder="例如：兄弟，不是我不给，是上面没拨款...")
 
-    # Analysis & Generation
-    st.subheader("2. 生成博弈话术")
-    if st.button("🚀 生成回怼策略"):
+    if st.button("🚀 生成回怼策略", key="btn_neg"):
+        token = get_api_token()
         if not user_input_text:
-            st.warning("请先提供老板的回复内容。")
-        elif not api_key:
-             st.error("请输入 ModelScope Access Token。")
+            st.toast("⚠️ 请先提供内容")
+        elif not token:
+             st.error("请先在【个人中心】配置 API Token")
         else:
-            with st.spinner("老张 (Qwen-3) 正在分析老板的心理..."):
-                # Construct Prompt
+            with st.spinner("分析中..."):
                 prompt_content = f"老板的回复是：{user_input_text}。请帮我分析他的心理，并生成三个维度的回复策略。"
-                
-                response = utils.call_qwen_max(prompt_content, api_key=api_key)
-                
-                st.markdown("### AI 分析与建议")
+                response = utils.call_qwen_max(prompt_content, api_key=token)
+                st.markdown("### 💡 建议回复")
                 st.write(response)
-                
-                # We could structure this better if we ask JSON, but text is fine for 'v1'
-                # Let's assume the model returns a formatted text for now.
 
-elif page == "2. 证据 & 告知书 (Archivist)":
-    st.header("📂 证据链与告知书模块")
-    st.markdown("---")
+# --- Tab 2: Archivist ---
+with tab2:
+    st.caption("截图自动提取，一键生成法律告知书")
     
-    env_token = os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
-    api_key = st.sidebar.text_input("ModelScope Token", value=env_token if env_token else "", type="password")
-
-    uploaded_files = st.file_uploader("上传聊天记录/转账截图 (支持多图)", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+    uploaded_files = st.file_uploader("上传截图", accept_multiple_files=True, type=['png', 'jpg'], label_visibility="collapsed")
     
-    # Session state for extracted data
-    if "evidence_data" not in st.session_state:
-        st.session_state.evidence_data = {}
-        
     if uploaded_files:
-        # Fix: Create a list of captions equal to the number of images
         captions = [f"证据 {i+1}" for i in range(len(uploaded_files))]
-        st.image(uploaded_files, caption=captions, width=150)
+        st.image(uploaded_files, caption=captions, width=100)
         
-        if st.button("🔍 AI 智能提取要素"):
-            if not api_key:
-                 st.error("请配置 ModelScope Token")
+        if st.button("🔍 提取要素", key="btn_ocr"):
+            token = get_api_token()
+            if not token:
+                 st.error("请先在【个人中心】配置 API Token")
             else:
-                with st.spinner("Qwen-VL 正在阅读您的截图..."):
+                with st.spinner("提取中..."):
                     import tempfile
                     temp_paths = []
                     try:
-                        for uploaded_file in uploaded_files:
-                            # Streamlit file uploader returns a BytesIO compatible object
-                            # We can save it to a temp file for local path access by utils
-                            suffix = f".{uploaded_file.name.split('.')[-1]}" if '.' in uploaded_file.name else ".jpg"
+                        for uf in uploaded_files:
+                            suffix = f".{uf.name.split('.')[-1]}" if '.' in uf.name else ".jpg"
                             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
-                                f.write(uploaded_file.getbuffer())
+                                f.write(uf.getbuffer())
                                 temp_paths.append(f.name)
                         
-                        # Real Call to Qwen-VL
-                        res_text = utils.call_qwen_vl(temp_paths, api_key=api_key)
-                        st.markdown(f"**API 原始返回:**\n{res_text}")
-                        
-                        # Attempt to parse specific fields using simple logic or regex if format is not perfect JSON
-                        # For now, we trust the model follows the prompt instruction to return JSON format text often
-                        # or we just display it and ask user to fill form.
-                        # Let's try to extract JSON-like structure if present
-                        import re
-                        import json
-                        
+                        res_text = utils.call_qwen_vl(temp_paths, api_key=token)
+                        # Simple JSON extraction logic
+                        import re, json
                         match = re.search(r'\{.*\}', res_text, re.DOTALL)
                         if match:
                             try:
-                                json_str = match.group(0)
-                                extracted = json.loads(json_str)
+                                extracted = json.loads(match.group(0))
                                 st.session_state.evidence_data.update(extracted)
-                                st.success("要素提取成功！")
+                                st.toast("✅ 提取成功")
                             except:
-                                st.warning("未能自动解析 JSON，请手动确认信息。")
+                                st.warning("格式解析失败，请手动填写")
                         else:
-                            st.warning("识别完成，但格式不标准，请参照下方手动填写。")
-                            
+                            st.warning("识别结果非标准JSON") 
                     except Exception as e:
-                        st.error(f"处理出错: {e}")
+                        st.error(f"Error: {e}")
                     finally:
-                        # Cleanup temp files
                         for p in temp_paths:
-                            try:
-                                os.remove(p)
-                            except:
-                                pass
-    
-    st.subheader("📝 确认告知书内容")
+                            try: os.remove(p)
+                            except: pass
+
     with st.form("evidence_form"):
+        st.markdown("##### 📝 确认信息")
         col1, col2 = st.columns(2)
-        debtor = col1.text_input("欠款人/老板", value=st.session_state.evidence_data.get("debtor", ""))
-        amount = col2.text_input("欠款金额 (元)", value=st.session_state.evidence_data.get("amount", ""))
-        date = col1.text_input("承诺/截止日期", value=st.session_state.evidence_data.get("date", ""))
+        debtor = col1.text_input("欠款人", value=st.session_state.evidence_data.get("debtor", ""))
+        amount = col2.text_input("金额", value=st.session_state.evidence_data.get("amount", ""))
+        date = col1.text_input("承诺日期", value=st.session_state.evidence_data.get("date", ""))
         u_name = col2.text_input("您的称呼", value=st.session_state.evidence_data.get("u_name", ""))
         
-        submitted = st.form_submit_button("📄 生成《限期支付告知书》")
+        submitted = st.form_submit_button("生成告知书")
     
     if submitted:
-        import utils
-        data = {"debtor": debtor, "amount": amount, "date": date, "u_name": u_name, "current_date": "2024-01-17"}
+        data = {"debtor": debtor, "amount": amount, "date": date, "u_name": u_name}
         pdf_file = utils.generate_pdf(data)
         
+        # Save mock case file
+        st.session_state.case_file = data
+        
         with open(pdf_file, "rb") as f:
-            st.download_button(
-                label="⬇️ 下载告知书 PDF",
-                data=f,
-                file_name="限期支付告知书.pdf",
-                mime="application/pdf"
-            )
-        st.success("告知书已生成！您可以下载发送给老板。")
-        
-        # Save to global case file (mock)
-        st.session_state['case_file'] = data
-        st.session_state['case_file']['evidence_summary'] = f"Uploaded {len(uploaded_files) if uploaded_files else 0} images."
+            st.download_button("⬇️ 下载PDF", f, "告知书.pdf", "application/pdf")
 
-elif page == "3. 公益导航 & 律师 (Lighthouse)":
-    st.header("⚖️ 公益导航与模拟律师")
-    st.markdown("---")
+# --- Tab 3: Lawyer ---
+with tab3:
+    st.caption("模拟真实律师咨询 (支持附件)")
     
-    # 1. Check Case File
+    # Case File Preview
     case_data = st.session_state.get('case_file', {})
+    if case_data:
+        st.info(f"📂 已关联案卷：向 {case_data.get('debtor')} 追讨 {case_data.get('amount')} 元")
     
-    with st.expander("📂 查看当前维权案卷包 (Case File)", expanded=True):
-        if case_data:
-            st.json(case_data)
-        else:
-            st.warning("暂无案卷信息，建议先去【模块2】生成告知书，或手动补充信息。")
-    
-    # 2. Offline Navigation
-    st.subheader("📍 线下维权地图")
-    city = st.text_input("请输入您所在的城市", "石家庄")
-    if city:
-        st.info(f"为您找到 {city} 的维权机构（示例数据）：\n\n1. {city}劳动保障监察支队 - 电话：12333\n2. {city}法律援助中心 - 地址：市中心XX路XX号")
-        
-    st.markdown("---")
-    
-    # 3. AI Lawyer Chat
-    st.subheader("👨‍⚖️ AI 公益律师在线咨询")
-    
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        # Initial greeting based on case file
-        if case_data:
-            welcome_msg = f"你好，我是公益律师。我已经看了你的案卷，也就是向 {case_data.get('debtor', '老板')} 追讨 {case_data.get('amount', '工资')} 的事。我们可以直接开始聊，你想先问什么？"
-        else:
-            welcome_msg = "你好，我是公益律师。请问遇到了什么劳动纠纷？"
-        st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
+    with st.expander("📎 发送补充材料", expanded=False):
+        st.file_uploader("上传附件", accept_multiple_files=True, key="lawyer_upload")
 
-    # Display chat messages
+    # Chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat Input
-    if prompt := st.chat_input("向律师提问 (例如：老板如果不回消息怎么办？)"):
+    if prompt := st.chat_input("请描述案情..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            # Reuse key from session or logic
-            env_token = os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
-            # Ideally we check sidebar input but it might be cleared if we switched pages without session state persistence for it
-            # But the user likely entered it again if prompted.
-            # Simplified: Use env first
+            if case_data: st.toast("✅ 案卷已同步律师")
+            token = get_api_token()
             
-            if not env_token:
-                 st.warning("如需使用 AI 律师，请确保配置了 ModelScope Token (环境变量或代码中配置)")
-                 # Fallback to mock if needed, or error
-            
-            with st.spinner("思考中..."):
-                import utils
-                # Context injection
-                context_str = str(case_data) if case_data else "暂无具体案卷，请引导用户补充案情。"
-                system_prompt = utils.LAWYER_SYSTEM_PROMPT_TEMPLATE.format(case_context=context_str)
-                
-                response_content = utils.call_qwen_max(prompt, system_prompt=system_prompt, api_key=env_token)
+            if not token:
+                 st.error("请先在【个人中心】配置 Token")
+                 response_content = "请配置 API Key。"
+            else:
+                with st.spinner("律师思考中..."):
+                    context_str = str(case_data) if case_data else "无详细案卷。"
+                    sys_prompt = utils.LAWYER_SYSTEM_PROMPT_TEMPLATE.format(case_context=context_str)
+                    response_content = utils.call_qwen_max(prompt, system_prompt=sys_prompt, api_key=token)
             
             st.markdown(response_content)
         st.session_state.messages.append({"role": "assistant", "content": response_content})
+
+# --- Tab 4: Profile (Mine) ---
+with tab4:
+    # 1. Header
+    col_u1, col_u2 = st.columns([1, 3])
+    with col_u1:
+        st.image("https://api.dicebear.com/9.x/micah/svg?seed=Felix", width=80) 
+    with col_u2:
+        st.subheader(st.session_state.user_info["name"])
+        st.caption(f"ID: {st.session_state.user_info['id']}")
+        st.caption(f"维权信用分: {st.session_state.user_info['credits']}")
+    
+    st.divider()
+    
+    # 2. Local Map (Moved from Module 3)
+    st.subheader("📍 本地维权地图")
+    city = st.text_input("当前定位", "石家庄")
+    if  city:
+        st.success(f"已定位 {city} 周边机构")
+        st.markdown(f"""
+        - 🏛️ **{city}劳动监察支队**  
+          📞 12333 | 📍 此处显示距离 (1.2km)
+        - ⚖️ **{city}法律援助中心**  
+          📞 0311-12345678 | 📍 此处显示距离 (3.5km)
+        """)
+        
+    st.divider()
+    
+    # 3. Settings (API Config)
+    with st.expander("⚙️ 设置 (API Config)", expanded=True):
+        current_token = get_api_token()
+        display_token = current_token[:8] + "..." if current_token else ""
+        st.text_input("当前已加载 Token", value=display_token, disabled=True)
+        
+        new_key = st.text_input("更新 ModelScope Token", type="password", key="custom_api_key")
+        if new_key:
+            st.success("Token 已更新 (当前会话有效)")
+    
+    st.divider()
+    st.caption("关于薪盾 | 版本 v1.0.0")

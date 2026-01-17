@@ -1,0 +1,9 @@
+{
+    "sdk_type": "streamlit",
+    "resource_configuration": "platform/2v-cpu-16g-mem",
+    "base_image": "ubuntu22.04-py311-torch2.3.1-modelscope1.31.0",
+    "environment_variables": [
+        {"name": "MODELSCOPE_ACCESS_TOKEN", "value": "ms-cdcafa0f-525b-4cf8-a98d-b11bc25f2a41"},
+        {"name": "DASHSCOPE_API_KEY", "value": "ms-cdcafa0f-525b-4cf8-a98d-b11bc25f2a41"}
+    ]
+}

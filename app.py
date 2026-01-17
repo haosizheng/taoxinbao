@@ -1,4 +1,7 @@
+
 import streamlit as st
+import utils
+import os
 
 # Page Config
 st.set_page_config(
@@ -18,6 +21,7 @@ page = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 st.sidebar.caption("赋能劳动者，让维权更简单。")
+st.sidebar.caption("Powered by Qwen-3 & ModelScope")
 
 # Main Content
 if page == "主页":
@@ -27,8 +31,8 @@ if page == "主页":
     
     我们为您提供一站式的讨薪支持：
     
-    1. **沟通博弈**: 老板推诿不给钱？AI 帮您生成高情商回复。
-    2. **证据存证**: 自动识别聊天截图，一键生成法律告知书。
+    1. **沟通博弈**: 老板推诿不给钱？AI (Qwen-3) 帮您生成高情商回复。
+    2. **证据存证**: 自动识别聊天截图，一键生成法律告知书 (Qwen-VL)。
     3. **公益导航**: 连接模拟律师与线下维权机构，让您不再孤单。
     
     👈 请在左侧选择功能开始使用。
@@ -38,10 +42,10 @@ elif page == "1. 沟通博弈 (Negotiator)":
     st.header("💬 沟通博弈模块")
     st.markdown("---")
     
-    # API Key Configuration (Temporary for Dev)
-    api_key = st.sidebar.text_input("DashScope API Key", type="password")
-    if api_key:
-        dashscope.api_key = api_key
+    # API Key Configuration
+    # Try to load from env first, else ms_deploy.json, else ask user
+    env_token = os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
+    api_key = st.sidebar.text_input("ModelScope Token (自动读取配置)", value=env_token if env_token else "", type="password")
     
     # Input Area
     st.subheader("1. 录入老板的回复")
@@ -52,15 +56,13 @@ elif page == "1. 沟通博弈 (Negotiator)":
     if input_method == "🎤 语音录入":
         audio_value = st.audio_input("按住录音 (或上传音频)")
         if audio_value:
-            st.success("录音成功！正在识别...")
-            # Todo: Save audio temp file and call recognize_audio
-            # For now, let's mock it or use a placeholder if utils not fully ready
-            st.info("语音识别功能需要连接 API。此处暂模拟识别结果。")
+            st.warning("⚠️ 注意：当前语音转文字功能暂未对接实时 API (需 Paraformer)，请使用文字粘贴测试核心逻辑，或等待语音模块更新。")
+            st.info("（模拟）语音识别中...")
             user_input_text = "老板说最近工程款还没到账，让我再等等，下个月一定给。"
             st.text_area("识别结果：", value=user_input_text, height=100)
             
     else:
-        user_input_text = st.text_area("直接粘贴老板发来的文字/语音转文字内容", height=150, placeholder="例如：兄弟，不是我不给，是上面没拨款啊...")
+        user_input_text = st.text_area("直接粘贴老板发来的文字", height=150, placeholder="例如：兄弟，不是我不给，是上面没拨款啊...")
 
     # Analysis & Generation
     st.subheader("2. 生成博弈话术")
@@ -68,16 +70,13 @@ elif page == "1. 沟通博弈 (Negotiator)":
         if not user_input_text:
             st.warning("请先提供老板的回复内容。")
         elif not api_key:
-             st.error("请输入 DashScope API Key 才能使用 AI 功能。")
+             st.error("请输入 ModelScope Access Token。")
         else:
-            with st.spinner("老张正在分析老板的心理..."):
-                # Call AI
-                import utils
-                
+            with st.spinner("老张 (Qwen-3) 正在分析老板的心理..."):
                 # Construct Prompt
                 prompt_content = f"老板的回复是：{user_input_text}。请帮我分析他的心理，并生成三个维度的回复策略。"
                 
-                response = utils.call_qwen_max(prompt_content, system_prompt=utils.NEGOTIATOR_SYSTEM_PROMPT)
+                response = utils.call_qwen_max(prompt_content, api_key=api_key)
                 
                 st.markdown("### AI 分析与建议")
                 st.write(response)
@@ -89,6 +88,9 @@ elif page == "2. 证据 & 告知书 (Archivist)":
     st.header("📂 证据链与告知书模块")
     st.markdown("---")
     
+    env_token = os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
+    api_key = st.sidebar.text_input("ModelScope Token", value=env_token if env_token else "", type="password")
+
     uploaded_files = st.file_uploader("上传聊天记录/转账截图 (支持多图)", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
     
     # Session state for extracted data
@@ -99,34 +101,53 @@ elif page == "2. 证据 & 告知书 (Archivist)":
         st.image(uploaded_files, caption="已上传证据", width=150)
         
         if st.button("🔍 AI 智能提取要素"):
-            if 'api_key' not in locals() and not getattr(dashscope, 'api_key', None):
-                 st.error("请先在侧边栏或模块一中配置 API Key")
+            if not api_key:
+                 st.error("请配置 ModelScope Token")
             else:
                 with st.spinner("Qwen-VL 正在阅读您的截图..."):
-                    # Mocking the file path handling for Streamlit (need to save to temp)
                     import tempfile
                     temp_paths = []
-                    for uploaded_file in uploaded_files:
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as f:
-                            f.write(uploaded_file.getbuffer())
-                            temp_paths.append(f.name)
+                    try:
+                        for uploaded_file in uploaded_files:
+                            # Streamlit file uploader returns a BytesIO compatible object
+                            # We can save it to a temp file for local path access by utils
+                            suffix = f".{uploaded_file.name.split('.')[-1]}" if '.' in uploaded_file.name else ".jpg"
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
+                                f.write(uploaded_file.getbuffer())
+                                temp_paths.append(f.name)
+                        
+                        # Real Call to Qwen-VL
+                        res_text = utils.call_qwen_vl(temp_paths, api_key=api_key)
+                        st.markdown(f"**API 原始返回:**\n{res_text}")
+                        
+                        # Attempt to parse specific fields using simple logic or regex if format is not perfect JSON
+                        # For now, we trust the model follows the prompt instruction to return JSON format text often
+                        # or we just display it and ask user to fill form.
+                        # Let's try to extract JSON-like structure if present
+                        import re
+                        import json
+                        
+                        match = re.search(r'\{.*\}', res_text, re.DOTALL)
+                        if match:
+                            try:
+                                json_str = match.group(0)
+                                extracted = json.loads(json_str)
+                                st.session_state.evidence_data.update(extracted)
+                                st.success("要素提取成功！")
+                            except:
+                                st.warning("未能自动解析 JSON，请手动确认信息。")
+                        else:
+                            st.warning("识别完成，但格式不标准，请参照下方手动填写。")
                             
-                    import utils
-                    prompt = "请分析这些图片，提取以下信息：1.欠款人姓名/称呼 2.欠款金额 3.承诺还款日期 4.用户(债权人)可能的称呼。请以JSON格式返回。"
-                    
-                    # Call VL
-                    # res = utils.call_qwen_vl(temp_paths, prompt) # Uncomment when key is ready
-                    
-                    # Mock Result for Dev
-                    import time
-                    time.sleep(1)
-                    st.session_state.evidence_data = {
-                        "debtor": "王总",
-                        "amount": "15000",
-                        "date": "2023年12月31日",
-                        "u_name": "小李"
-                    }
-                    st.success("提取成功！")
+                    except Exception as e:
+                        st.error(f"处理出错: {e}")
+                    finally:
+                        # Cleanup temp files
+                        for p in temp_paths:
+                            try:
+                                os.remove(p)
+                            except:
+                                pass
     
     st.subheader("📝 确认告知书内容")
     with st.form("evidence_form"):
@@ -201,18 +222,23 @@ elif page == "3. 公益导航 & 律师 (Lighthouse)":
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            if 'api_key' not in locals() and not getattr(dashscope, 'api_key', None):
-                 st.error("请先配置 API Key")
-                 response_content = "请配置 API Key 以使用 AI 律师。"
-            else:
+            # Reuse key from session or logic
+            env_token = os.getenv("MODELSCOPE_ACCESS_TOKEN") or utils.load_local_token()
+            # Ideally we check sidebar input but it might be cleared if we switched pages without session state persistence for it
+            # But the user likely entered it again if prompted.
+            # Simplified: Use env first
+            
+            if not env_token:
+                 st.warning("如需使用 AI 律师，请确保配置了 ModelScope Token (环境变量或代码中配置)")
+                 # Fallback to mock if needed, or error
+            
+            with st.spinner("思考中..."):
                 import utils
                 # Context injection
-                context_str = str(case_data) if case_data else "暂无具体案卷，请引导用户补充。"
+                context_str = str(case_data) if case_data else "暂无具体案卷，请引导用户补充案情。"
                 system_prompt = utils.LAWYER_SYSTEM_PROMPT_TEMPLATE.format(case_context=context_str)
                 
-                # We should append history for context window, but for MVP simple turn or last few is okay
-                # Let's pass the current prompt to qwen-max with the system prompt
-                response_content = utils.call_qwen_max(prompt, system_prompt=system_prompt)
+                response_content = utils.call_qwen_max(prompt, system_prompt=system_prompt, api_key=env_token)
             
             st.markdown(response_content)
         st.session_state.messages.append({"role": "assistant", "content": response_content})

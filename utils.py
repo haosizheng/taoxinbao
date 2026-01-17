@@ -1,132 +1,157 @@
 import os
-import dashscope
-from dashscope.audio.asr import Recognition
-from http import HTTPStatus
 import json
-
-# Ensure you set DASHSCOPE_API_KEY in your environment or passing it here
-# dashscope.api_key = "YOUR_API_KEY"
-
-def call_qwen_max(prompt, system_prompt="You are a helpful assistant."):
-    """
-    Call Qwen-Max for text generation.
-    """
-    try:
-        messages = [
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': prompt}
-        ]
-        response = dashscope.Generation.call(
-            dashscope.Generation.Models.qwen_max,
-            messages=messages,
-            result_format='message',  # set the result to be "message" format.
-        )
-        if response.status_code == HTTPStatus.OK:
-            return response.output.choices[0]['message']['content']
-        else:
-            return f"Error: {response.code} - {response.message}"
-    except Exception as e:
-        return f"Exception: {str(e)}"
-
-def recognize_audio(audio_file_path):
-    """
-    Use DashScope Paraformer for ASR (Speech to Text).
-    This function assumes audio_file_path is a local path to a wav/mp3 file.
-    """
-    try:
-        recognition = Recognition(model='paraformer-realtime-v1', format='wav', sample_rate=16000) 
-        # Note: Paraformer-realtime might need specific format. 
-        # For simple file file upload, 'paraformer-v1' (non-realtime) is easier for file processing.
-        # Let's use 'paraformer-v1' for file transcription.
-        
-        # Simple implementation using the sensevoice or paraformer file API
-        # Actually, let's use the standard Recognition call for file
-        rec = Recognition(model='paraformer-v1', format='wav', sample_rate=16000)
-        result = rec.call(audio_file_path)
-        
-        if result.status_code == HTTPStatus.OK:
-            # The result format depends on the model, usually extracting text is needed
-            # For paraformer-v1:
-            if 'sentences' in result.output:
-                 text = "".join([s['text'] for s in result.output['sentences']])
-                 return text
-            else:
-                 # Fallback/Debug
-                 return json.dumps(result.output, ensure_ascii=False)
-        else:
-             return f"ASR Error: {result.code} - {result.message}"
-    except Exception as e:
-        return f"ASR Exception: {str(e)}"
-
-# System Prompts
-NEGOTIATOR_SYSTEM_PROMPT = """
-你是一位拥有15年经验的基层法律协调员，名字叫“老张”。你极具同理心，专门帮助工人讨薪。
-你的语言风格接地气、稳重、有力量，通过“情理法”三个层面解决问题。
-不要使用生硬的法律术语堆砌，而要把法律条文掰碎了讲给老板听。
-"""
-
-def call_qwen_vl(image_paths, prompt):
-    """
-    Call Qwen-VL-Max for image analysis.
-    image_paths: list of local file paths or URLs.
-    """
-    try:
-        messages = [
-            {
-                'role': 'user',
-                'content': [
-                    {'image': path} for path in image_paths
-                ] + [{'text': prompt}]
-            }
-        ]
-        response = dashscope.MultiModalConversation.call(
-            model='qwen-vl-max',
-            messages=messages
-        )
-        if response.status_code == HTTPStatus.OK:
-            return response.output.choices[0]['message']['content'][0]['text']
-        else:
-            return f"Error: {response.code} - {response.message}"
-    except Exception as e:
-        return f"Exception: {str(e)}"
-
+import base64
+from openai import OpenAI
 from fpdf import FPDF
+import streamlit as st
+
+# Load Prompts
+try:
+    with open("prompts.json", "r", encoding="utf-8") as f:
+        PROMPTS = json.load(f)
+except FileNotFoundError:
+    PROMPTS = {}
+
+# Configuration
+MODELSCOPE_API_BASE = "https://api-inference.modelscope.cn/v1/"
+# User provided specific model IDs
+MODEL_TEXT = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+MODEL_VL = "Qwen/Qwen3-VL-235B-A22B-Instruct"
+
+def load_local_token():
+    """
+    Helper to load token from ms_deploy.json for local development
+    if environment variable is missing.
+    """
+    try:
+        with open("ms_deploy.json", "r") as f:
+            config = json.load(f)
+            for env in config.get("environment_variables", []):
+                if env["name"] == "MODELSCOPE_ACCESS_TOKEN":
+                    return env["value"]
+    except:
+        pass
+    return None
+
+def get_client(api_key=None):
+    """
+    Get OpenAI client configured for ModelScope.
+    Prioritize explicitly passed key, then env var, then ms_deploy.json.
+    """
+    token = api_key or os.getenv("MODELSCOPE_ACCESS_TOKEN") or os.getenv("DASHSCOPE_API_KEY") or load_local_token()
+    if not token:
+        return None
+    return OpenAI(
+        api_key=token,
+        base_url=MODELSCOPE_API_BASE,
+    )
+
+def call_qwen_max(prompt, system_prompt=None, api_key=None):
+    """
+    Call Qwen-3 Text Model via OpenAI SDK.
+    """
+    client = get_client(api_key)
+    if not client:
+        return "Error: Please configure API Token."
+    
+    sys_prompt = system_prompt or PROMPTS.get("negotiator_system", "You are a helpful assistant.")
+    
+    try:
+        completion = client.chat.completions.create(
+            model=MODEL_TEXT,
+            messages=[
+                {'role': 'system', 'content': sys_prompt},
+                {'role': 'user', 'content': prompt}
+            ],
+            stream=False
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"API Error: {str(e)}"
+
+def call_qwen_vl(image_paths, prompt_text=None, api_key=None):
+    """
+    Call Qwen-3 VL Model via OpenAI SDK.
+    image_paths: list of local file paths.
+    """
+    client = get_client(api_key)
+    if not client:
+        return "Error: Please configure API Token."
+    
+    prompt_text = prompt_text or PROMPTS.get("evidence_extract_prompt", "Describe this image.")
+    
+    content_payload = []
+    
+    # 1. Add Images (Base64 encoding required for local files with OpenAI Schema usually, 
+    # but ModelScope API might support URLs. For local Streamlit, we must use Base64).
+    for img_path in image_paths:
+        try:
+            with open(img_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+                # Determine detailed mime type if possible, default to jpeg
+                mime_type = "image/jpeg"
+                if img_path.lower().endswith(".png"):
+                    mime_type = "image/png"
+                
+                content_payload.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime_type};base64,{base64_image}"
+                    }
+                })
+        except Exception as e:
+            return f"Error reading image {img_path}: {str(e)}"
+
+    # 2. Add Text
+    content_payload.append({"type": "text", "text": prompt_text})
+
+    try:
+        completion = client.chat.completions.create(
+            model=MODEL_VL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": content_payload
+                }
+            ],
+            stream=False
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"VL API Error: {str(e)}"
 
 def generate_pdf(data, filename="evidence.pdf"):
     """
-    Generate a simple PDF 'Notice to Pay' based on extracted data.
-    data: dict containing keys like 'debtor', 'amount', 'date', 'u_name'
+    Generate PDF using specific Chinese font.
     """
-    class PDF(FPDF):
-        def header(self):
-            # Attempt to use a unicode font if available, otherwise standard
-            # Since we can't easily rely on Chinese fonts being present in minimal env,
-            # we will try to safe-guard or rely on system fonts if possible in dev.
-            # IN PRODUCTION/COMPETITION: You must bundle a .ttf font.
-            # For this MVP, we will try to use a standard font or just ASCII if font fails
-            # But Chinese is required. Let's assume we can add a font or use a simple one if provided.
-            self.set_font('Arial', 'B', 15)
-            self.cell(0, 10, 'NOTICE TO PAY (DEMO)', 0, 1, 'C') # Fallback title
-
-    pdf = PDF()
+    pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
     
-    # We really need a Chinese font for this to be useful.
-    # In a real deployed app, we would bundle 'SimHei.ttf'
-    # For now, let's write English placeholders or just the structure 
-    # and instructions on how to enable Chinese.
+    # Register Font
+    font_path = "public/fonts/SourceHanSansSC-Medium.ttf"
+    try:
+        pdf.add_font('SourceHanSansSC', '', font_path, uni=True)
+        pdf.set_font('SourceHanSansSC', '', 12)
+    except Exception as e:
+        # Fallback if font missing (Dev environment)
+        print(f"Font loading error: {e}")
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, "Error: Chinese font not found. Displaying fallback text.", 0, 1)
+
+    # Use template from prompts.json
+    template = PROMPTS.get("pdf_template_text", "Notice to Pay: {amount}")
     
-    pdf.cell(0, 10, f"To: {data.get('debtor', 'Employer')}", 0, 1)
-    pdf.cell(0, 10, f"From: {data.get('u_name', 'Employee')}", 0, 1)
-    pdf.cell(0, 10, f"Date: {data.get('current_date', '')}", 0, 1)
-    pdf.ln(10)
-    
-    pdf.multi_cell(0, 10, f"Subject: Formal Demand for Payment of {data.get('amount', '0')} RMB\n\n"
-                          f"This letter serves as a formal notice regarding the unpaid wages...\n"
-                          f"According to the Labor Law...\n\n"
-                          f"(Note: Chinese font support requires uploading a .ttf file to the environment)")
-    
+    try:
+        # Basic validation to avoid KeyError
+        safe_data = {k: data.get(k, 'N/A') for k in ['debtor', 'u_name', 'amount', 'date']}
+        content = template.format(**safe_data)
+        
+        pdf.multi_cell(0, 10, content)
+    except Exception as e:
+        pdf.cell(0, 10, f"Error generating content: {e}", 0, 1)
+
     pdf.output(filename)
     return filename
 
+# Expose constants for APP
+LAWYER_SYSTEM_PROMPT_TEMPLATE = PROMPTS.get("lawyer_system_template", "")

@@ -29,18 +29,27 @@ def inject_custom_css():
                 display: none;
             }
             
+            /* Target both the section and the container for robust background */
+            section.main {
+                overflow: visible !important;
+            }
+            
+            div[data-testid="stAppViewBlockContainer"] {
+                overflow: visible !important;
+            }
+
             .block-container {
                 max-width: 500px !important;
                 padding-top: 20px !important;
-                padding-bottom: 120px !important;
+                padding-bottom: 200px !important; /* Back to generous padding */
                 margin: 0 auto !important;
                 
                 /* Phone Screen Look */
                 background-color: #F5F7FA;
                 position: relative;
-                display: block;
-                flex: 1 0 auto;
-                min-height: 100vh;
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 100vh !important;
                 height: auto !important;
                 overflow: visible !important;
                 box-shadow: 0 0 30px rgba(0,0,0,0.1); 

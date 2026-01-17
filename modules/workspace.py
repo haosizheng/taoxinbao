@@ -12,7 +12,7 @@ def render(case, token):
         c_back, c_title = st.columns([1, 4])
         with c_back:
             if st.button("↩", key="exit_ws_btn"):
-                st.session_state.app_mode = "HOME"
+                st.session_state.app_mode = "RECOVERY"
                 st.rerun()
         with c_title:
             st.caption(f"当前案卷: {case['name']}")

@@ -313,5 +313,69 @@ def generate_pdf(data, filename="evidence.pdf", content=None):
     pdf.output(filename)
     return filename
 
+def generate_case_brief_pdf(content, images=None, filename="case_brief.pdf"):
+    """
+    Generate a Case Brief PDF.
+    content: Markdown-formatted text.
+    images: List of image paths to append/embed.
+    """
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Register Font (Reuse from generate_pdf)
+    font_path = "public/fonts/SourceHanSansSC-Medium.ttf"
+    try:
+        pdf.add_font('SourceHanSansSC', '', font_path, uni=True)
+        pdf.set_font('SourceHanSansSC', '', 12)
+    except Exception as e:
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, "Error: Chinese font not found.", 0, 1)
+
+    # 1. Title
+    pdf.set_font('SourceHanSansSC', '', 18)
+    pdf.cell(0, 15, "案件法律事实摘要（律师接案笔录）", 0, 1, 'C')
+    pdf.ln(5)
+
+    # 2. Main Content (Text)
+    pdf.set_font('SourceHanSansSC', '', 12)
+    # Simple line handling for now. 
+    # Better: simple parser for ## Headers to bold them.
+    for line in content.split('\n'):
+        line = line.strip()
+        if not line:
+            pdf.ln(2)
+            continue
+            
+        if line.startswith("## "):
+            pdf.ln(5)
+            pdf.set_font('SourceHanSansSC', '', 14)
+            pdf.cell(0, 10, line.replace("## ", ""), 0, 1)
+            pdf.set_font('SourceHanSansSC', '', 12)
+        else:
+            pdf.multi_cell(0, 8, line)
+
+    # 3. Evidence Images
+    if images and len(images) > 0:
+        pdf.add_page()
+        pdf.set_font('SourceHanSansSC', '', 14)
+        pdf.cell(0, 10, "附：关键证据图片", 0, 1)
+        pdf.ln(5)
+        
+        for idx, img_path in enumerate(images):
+            try:
+                # Add Header
+                pdf.set_font('SourceHanSansSC', '', 10)
+                pdf.cell(0, 10, f"证据附件 {idx+1}: {os.path.basename(img_path)}", 0, 1)
+                
+                # Image
+                # Calculate width to fit page (A4 width approx 210mm, margin 10mm*2 -> 190mm)
+                pdf.image(img_path, w=170) 
+                pdf.ln(10)
+            except Exception as e:
+                pdf.cell(0, 10, f"[无法加载图片: {os.path.basename(img_path)}]", 0, 1)
+
+    pdf.output(filename)
+    return filename
+
 # Expose constants for APP
 LAWYER_SYSTEM_PROMPT_TEMPLATE = PROMPTS.get("lawyer_system_template", "")

@@ -1,4 +1,5 @@
 import streamlit as st
+import utils
 import json
 import random
 import os
@@ -22,7 +23,7 @@ def render():
     
     # 3. My Cases
     with st.container(border=True):
-        st.subheader("📂 我的维权案卷")
+        utils.render_header_with_icon("archivist", "我的维权案卷")
         if not st.session_state.cases:
             # Empty State
             st.info("暂无记录，请点击下方按钮开始维护您的权益。")
@@ -42,7 +43,7 @@ def render():
                         
                         st.caption(f"创建时间: {date} | 岗位: {job}")
                         
-                        if st.button("🚀 开始讨薪", key=f"enter_{case['id']}", use_container_width=False):
+                        if st.button("开始讨薪", key=f"enter_{case['id']}", use_container_width=False):
                             st.session_state.active_case_id = case['id']
                             st.session_state.app_mode = "RECOVERY"
                             # st.session_state["main_nav_bar"] = "讨薪" # Auto-sync handled in app.py logic logic

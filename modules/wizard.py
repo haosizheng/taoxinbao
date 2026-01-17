@@ -1,4 +1,5 @@
 import streamlit as st
+import utils
 import uuid
 import time
 import re
@@ -30,14 +31,14 @@ def render():
     progress = step / total_steps
     
     # Header & Progress
-    st.markdown("<h2 style='text-align: center; margin-bottom: 0;'>📝 维权建档</h2>", unsafe_allow_html=True)
+    utils.render_header_with_icon("archivist", "维权建档", level=2)
     st.progress(progress, text=f"第 {step} 步 / 共 {total_steps} 步")
     
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
         if step == 1:
-            st.markdown("### 💰 利益锚定")
+            st.markdown("### 利益锚定")
             st.write("老乡，咱们先把这笔账记清楚。对方欠了你多少钱？大概欠了多久了？")
             
             # Big Input for Amount
@@ -66,7 +67,7 @@ def render():
             st.markdown('</div>', unsafe_allow_html=True)
 
         elif step == 2:
-            st.markdown("### 🎯 责任锁定")
+            st.markdown("### 责任锁定")
             st.write("冤有头债有主，咱们得明确是哪里、又是谁欠的这笔钱。")
             
             boss = st.text_input("老板或公司名字", 
@@ -99,7 +100,7 @@ def render():
                 st.markdown('</div>', unsafe_allow_html=True)
 
         elif step == 3:
-            st.markdown("### 🛡️ 身份赋权")
+            st.markdown("### 身份赋权")
             st.write("最后，咱们得确认是您本人在维权。怎么称呼您？当时是在什么岗位干活？")
             
             name = st.text_input("您的称呼", 
@@ -122,7 +123,7 @@ def render():
             with c2:
                 st.markdown('<div class="big-btn-wrapper">', unsafe_allow_html=True)
                 # Success style final button
-                if st.button("✨ 完成建档", use_container_width=True, type="primary"):
+                if st.button("完成建档", use_container_width=True, type="primary"):
                     if name and job:
                         st.session_state.temp_dossier["name"] = name
                         st.session_state.temp_dossier["job"] = job
@@ -143,7 +144,7 @@ def render():
 
     # Global Cancel at the bottom
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-    if st.button("❌ 放弃建档并返回", help="放弃当前输入的内容"):
+    if st.button("放弃建档并返回", help="放弃当前输入的内容"):
         st.session_state.wizard_step = 1
         st.session_state.temp_dossier = {}
         st.session_state.app_mode = "HOME"

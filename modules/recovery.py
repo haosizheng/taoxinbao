@@ -1,16 +1,17 @@
 import streamlit as st
+import utils
 import json
 from st_click_detector import click_detector
 
 def render():
-    st.markdown("### 🛠️ 讨薪工具箱") 
+    utils.render_header_with_icon("toolkit", "讨薪工具箱") 
     
-    # Define the 4 features with simplified, colloquial descriptions
+    # Define the 4 features with simplified, colloquial descriptions using flat SVGs
     features = [
-        {"icon": "💬", "title": "找话说", "sub": "教你怎么跟老板谈判"},
-        {"icon": "📷", "title": "存证据", "sub": "帮你整理聊天记录和转账"},
-        {"icon": "⚖️", "title": "出公函", "sub": "自动生成正式的催款函"},
-        {"icon": "🆘", "title": "找援助", "sub": "24小时AI律师在线咨询"}
+        {"icon": utils.ICONS["negotiator"], "title": "找话说", "sub": "教你怎么跟老板谈判"},
+        {"icon": utils.ICONS["camera"], "title": "存证据", "sub": "帮你整理聊天记录和转账"},
+        {"icon": utils.ICONS["archivist"], "title": "出公函", "sub": "自动生成正式的催款函"},
+        {"icon": utils.ICONS["lawyer"], "title": "找援助", "sub": "24小时AI律师在线咨询"}
     ]
     
     # Define styles for the button grid

@@ -1,7 +1,7 @@
 import streamlit as st
 import utils
 
-@st.dialog("📖 使用指南")
+@st.dialog("使用指南")
 def show_guide():
     st.markdown("""
     **三步维权法：**
@@ -10,7 +10,7 @@ def show_guide():
     3. **找援助**：点击“讨薪”->“找援助”，一键生成法律文书，或咨询AI律师。
     """)
 
-@st.dialog("⚠️ 免责声明")
+@st.dialog("免责声明")
 def show_disclaimer():
     st.markdown("""
     **法律责任声明：**
@@ -142,7 +142,7 @@ def render(case, token):
     st.markdown(f"""
     <div class="profile-container">
         <div class="profile-header">
-            <div class="avatar-circle">👤</div>
+            <div class="avatar-circle">{utils.ICONS["person"]}</div>
             <div class="user-meta">
                 <div class="user-name">{u['name']}</div>
                 <div class="user-id">用户 ID: {u['id']}</div>
@@ -155,16 +155,16 @@ def render(case, token):
     from st_click_detector import click_detector
     
     # CSS MUST be inside the HTML string for click_detector to apply it inside the iframe
-    menu_html = """
+    menu_html = f"""
     <style>
-        .list-menu-card {
+        .list-menu-card {{
             background-color: white;
             border-radius: 12px;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.05);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        .list-item {
+        }}
+        .list-item {{
             display: flex;
             align-items: center;
             padding: 18px 20px;
@@ -172,43 +172,46 @@ def render(case, token):
             color: #333 !important;
             border-bottom: 1px solid #F1F3F5;
             transition: background 0.2s;
-        }
-        .list-item:last-child {
+        }}
+        .list-item:last-child {{
             border-bottom: none;
-        }
-        .list-item:active {
+        }}
+        .list-item:active {{
             background-color: #F8F9FA;
-        }
-        .list-icon {
+        }}
+        .list-icon {{
             font-size: 20px;
             margin-right: 15px;
             width: 24px;
             text-align: center;
-        }
-        .list-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .list-text {{
             flex-grow: 1;
             font-size: 16px;
             font-weight: 500;
-        }
-        .list-arrow {
+        }}
+        .list-arrow {{
             color: #D1D1D6;
             font-size: 16px;
             font-weight: bold;
-        }
+        }}
     </style>
     <div class="list-menu-card">
         <a href='#' id='guide' class='list-item'>
-            <span class='list-icon'>📖</span>
+            <span class='list-icon' style='color: #E63946;'>{utils.ICONS["book"]}</span>
             <span class='list-text'>使用指南</span>
             <span class='list-arrow'>&gt;</span>
         </a>
         <a href='#' id='disclaimer' class='list-item'>
-            <span class='list-icon'>⚠️</span>
+            <span class='list-icon' style='color: #E63946;'>{utils.ICONS["warning"]}</span>
             <span class='list-text'>免责声明</span>
             <span class='list-arrow'>&gt;</span>
         </a>
         <a href='#' id='feedback' class='list-item'>
-            <span class='list-icon'>💬</span>
+            <span class='list-icon' style='color: #E63946;'>{utils.ICONS["feedback"]}</span>
             <span class='list-text'>系统反馈</span>
             <span class='list-arrow'>&gt;</span>
         </a>
@@ -226,7 +229,7 @@ def render(case, token):
     st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
 
     # 3. Case Management
-    st.subheader("📂 档案管理")
+    utils.render_header_with_icon("archivist", "档案管理")
     if not st.session_state.get("cases"):
         st.markdown("""
         <div class="empty-state">
@@ -243,7 +246,7 @@ def render(case, token):
                     st.write(f"**{d.get('boss', '未知老板')}**")
                     st.caption(f"欠薪: {d.get('amount', '0')}元 | {d.get('date', '未填日期')}")
                 with col2:
-                    if st.button("🗑️", key=f"del_{c['id']}", help="删除此档案"):
+                    if st.button("删除", key=f"del_{c['id']}", help="删除此档案"):
                         st.session_state.cases.remove(c)
                         if st.session_state.get("active_case_id") == c['id']:
                             st.session_state.active_case_id = None

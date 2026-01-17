@@ -7,7 +7,7 @@ def render(case, token):
     context_summary = f"用户身份：{d['name']}({d['job']})，地点：{d.get('place','未填')}。欠款人：{d['boss']}，金额：{d['amount']}元。"
     
     # 1. AI Case Brief Generator
-    with st.expander("🤖 生成案件法律事实摘要 (律师接案笔录)"):
+    with st.expander("智能生成案件法律事实摘要"):
         st.info("AI 将自动梳理您的建档信息、聊天记录和上传的证据，生成一份专业的报告。")
         
         brief_key = f"case_brief_{case['id']}"
@@ -41,7 +41,7 @@ def render(case, token):
             brief_content = st.text_area("摘要预览 (可修改)", value=st.session_state[brief_key], height=300)
             
             # Download Button
-            if st.button("📥 下载完整 PDF (含证据图)"):
+            if st.button("下载完整 PDF (含证据图)"):
                 # Get images list
                 images = []
                 # Assuming evidence is stored in case['evidence_data'] as {filename: path} 
@@ -70,7 +70,7 @@ def render(case, token):
 
     st.markdown("---")
 
-    st.subheader("⚖️ 律师顾问")
+    utils.render_header_with_icon("lawyer", "律师顾问")
     # Chat History from Case
     for m in case["messages"]:
         with st.chat_message(m["role"]): st.write(m["content"])

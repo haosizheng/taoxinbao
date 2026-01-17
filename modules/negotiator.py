@@ -66,7 +66,7 @@ def render(case, token):
     </style>
     """, unsafe_allow_html=True)
     
-    st.subheader("💬 话术咨询")
+    utils.render_header_with_icon("negotiator", "话术咨询")
     st.info(f"正在对抗：{d['boss']} (欠 {d['amount']}元)")
     
     # Mode Switcher - sac already looks fairly good, but we can wrap it
@@ -91,7 +91,7 @@ def render(case, token):
         # We'll use the native button but style it as a pill in this specific context.
         
         st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-        if st.button("🚀 生成主动催款话术", type="primary", use_container_width=True, key="initiate_btn"):
+        if st.button("生成主动催款话术", type="primary", use_container_width=True, key="initiate_btn"):
             if not token: st.error("请去【我的】配置 API 密钥")
             else:
                 with st.spinner("老张正在斟酌语气..."):
@@ -171,7 +171,7 @@ def render(case, token):
         </style>
         <div class="pill-button-container">
             <a href='#' id='analyze_trigger' class='pill-button'>
-                🚀 分析并回击
+                分析并回击
             </a>
         </div>
         """

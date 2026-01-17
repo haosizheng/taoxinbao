@@ -16,12 +16,9 @@ def inject_custom_css():
     st.markdown("""
         <style>
             /* 1. Global Reset & Fonts */
+            /* 1. Global Reset & Fonts */
             .stApp {
-                background-color: #e0e0e0; /* Desktop Background: Neural Grey */
-                background-image: linear-gradient(#e0e0e0, #cfcfcf);
-                background-attachment: fixed; /* Fix background during scroll */
-                background-repeat: no-repeat;
-                background-size: cover;
+                background-color: #e0e0e0 !important; /* Stable Neural Grey */
                 color: #333333;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             }
@@ -32,27 +29,25 @@ def inject_custom_css():
             header {visibility: hidden;} 
             
             /* 3. Mobile Viewport Simulation (The "Phone") */
-            ::-webkit-scrollbar {
-                display: none;
-            }
+            ::-webkit-scrollbar { display: none; }
             
-            /* Target both the section and the container for robust background */
-            section.main {
-                overflow: visible !important;
-            }
-            
-            div[data-testid="stAppViewBlockContainer"] {
+            /* Target all possible main containers to ensure transparency */
+            section.main, 
+            div[data-testid="stAppViewBlockContainer"],
+            div[data-testid="stAppViewContainer"] {
+                background-color: transparent !important;
                 overflow: visible !important;
             }
 
-            .block-container {
+            .block-container, div[data-testid="stMainBlockContainer"] {
                 max-width: 500px !important;
                 padding-top: 20px !important;
                 padding-bottom: 200px !important; 
                 margin: 0 auto !important;
+                width: 100% !important;
                 
-                /* Premium Mobile App Look */
-                background-color: #F8F9FA; /* Light Grey Background */
+                /* Premium Mobile App Surface */
+                background-color: #F8F9FA !important; 
                 position: relative;
                 display: flex !important;
                 flex-direction: column !important;
@@ -102,75 +97,101 @@ def inject_custom_css():
                 100% { transform: translate(-100%, 0); }
             }
             
-            /* 3. Bottom Layout & Navigation Cleanup */
+            /* 3. Bottom Layout & Navigation Cleanup (Fixed Point) */
             div[data-testid="stBottom"] {
                 position: fixed !important;
-                bottom: 0 !important;
+                bottom: 0px !important;
                 left: 50% !important;
                 transform: translateX(-50%) !important;
                 width: 100%;
                 max-width: 500px; 
                 z-index: 999999;
-                background-color: transparent !important;
-            }
-
-            /* Surgical strike on Streamlit internal padding */
-            div[data-testid="stBottomBlockContainer"] {
+                background-color: white !important; /* Force root to white */
                 padding: 0 !important;
                 margin: 0 !important;
             }
 
-            /* Remove padding from the vertical block inside bottom container */
-            div[data-testid="stBottom"] [data-testid="stVerticalBlock"] {
+            /* Aggressive removal of gaps in the bottom container hierarchy */
+            div[data-testid="stBottomBlockContainer"],
+            div[data-testid="stBottom"] [data-testid="stVerticalBlock"],
+            div[data-testid="stBottom"] div {
                 padding: 0 !important;
+                margin: 0 !important;
+                background-color: white !important; /* Force all intermediate levels to white */
+                border-top: none !important;
                 gap: 0 !important;
-            }
-            
-            div[data-testid="stBottom"] > div {
-                background-color: white; 
-                padding-bottom: 0px !important;
-                margin-bottom: 0px !important;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.03) !important; /* Subtler shadow */
+                overflow: visible !important;
             }
 
-            /* 4. Card Style for Containers (Native st.container(border=True)) */
+            /* Custom fix for the click_detector iframe parent */
+            div[data-testid="stElementContainer"] iframe {
+                display: block; /* Remove inline whitespace */
+                vertical-align: bottom;
+            }
+
+            /* 5. Modern Input Fields (Search-bar style) - Single Border Fix */
+            div[data-testid="stTextInput"] input, 
+            div[data-testid="stTextArea"] textarea {
+                background-color: #F1F3F5 !important;
+                border: none !important; /* Force no border on inner element */
+                border-radius: 12px !important;
+                padding: 12px 16px !important;
+                color: #212529 !important;
+                transition: all 0.2s ease !important;
+                box-shadow: none !important;
+            }
+
+            /* Target the wrapper for the focus border to avoid double lines */
+            div[data-testid="stTextInput"] > div, 
+            div[data-testid="stTextArea"] > div {
+                border: 1px solid transparent !important;
+                border-radius: 12px !important;
+                transition: all 0.2s ease !important;
+                background-color: #F1F3F5 !important;
+            }
+
+            div[data-testid="stTextInput"] > div:focus-within, 
+            div[data-testid="stTextArea"] > div:focus-within {
+                border: 1px solid #E63946 !important;
+                background-color: white !important;
+                box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1) !important;
+            }
+
+            /* Fix label spacing */
+            div[data-testid="stWidgetLabel"] p {
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                margin-bottom: 6px !important;
+                color: #495057 !important;
+            }
+            /* 6. Wizard & Progress Styles */
+            .stProgress > div > div > div > div {
+                background-color: #E63946 !important;
+            }
+            .stProgress p {
+                font-weight: 600 !important;
+                color: #495057 !important;
+            }
+
+            /* Custom Big Button Utility (used in Wizard) */
+            .big-btn-wrapper div[data-testid="stButton"] button {
+                height: 3.5rem !important;
+                font-size: 1.1rem !important;
+                font-weight: 700 !important;
+                border-radius: 14px !important;
+            }
+            .secondary-btn-wrapper div[data-testid="stButton"] button {
+                background-color: #F1F3F5 !important;
+                color: #495057 !important;
+                border: 1px solid #DEE2E6 !important;
+            /* 7. Card Style for Containers (Native st.container(border=True)) */
             div[data-testid="stVerticalBlockBorderWrapper"] {
                 background-color: white !important;
                 border-radius: 16px !important;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
                 border: 1px solid rgba(0,0,0,0.02) !important;
-                padding: 1.5rem !important; /* Increased padding */
+                padding: 1.5rem !important;
                 margin-bottom: 1.2rem;
-            }
-
-            /* 5. Input Fields Styling */
-            .stTextInput input, .stSelectbox div[data-baseweb="select"] {
-                border-radius: 12px !important;
-                border: 1px solid #E0E0E0;
-            }
-            
-            /* 6. Button Styling */
-            .stButton button {
-                border-radius: 12px;
-                height: 3rem;
-                font-weight: 600;
-            }
-
-            /* 7. Tabs Styling */
-            .stTabs [data-baseweb="tab-list"] {
-                gap: 1rem;
-                background-color: transparent;
-            }
-            .stTabs [data-baseweb="tab"] {
-                background-color: white;
-                border-radius: 8px;
-                padding: 0.5rem 1rem;
-                border: 1px solid #eee;
-            }
-            .stTabs [aria-selected="true"] {
-                background-color: #FF4B4B !important;
-                color: white !important;
-                border: none;
             }
         </style>
     """, unsafe_allow_html=True)

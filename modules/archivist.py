@@ -92,11 +92,18 @@ def render(case, token):
     # 1. Basic Info Inputs (Pre-filled)
     ev_data = case.get("evidence_data", {})
     
-    c1, c2 = st.columns(2)
-    db = c1.text_input("欠款人(公司)", value=ev_data.get("debtor", d.get("boss","")), key="arch_debtor")
-    am = c2.text_input("欠款金额(元)", value=ev_data.get("amount", d.get("amount","")), key="arch_amount")
-    dt = c1.text_input("欠款时间/期限", value=ev_data.get("date", d.get("date","")), key="arch_date")
-    un = c2.text_input("您的称呼", value=ev_data.get("u_name", d.get("name","")), key="arch_uname")
+    with st.container(border=True):
+        st.markdown("**👤 欠款人信息**")
+        db = st.text_input("欠款单位/个人名称", value=ev_data.get("debtor", d.get("boss","")), key="arch_debtor", placeholder="例如：某某有限公司")
+        un = st.text_input("您的正式称呼", value=ev_data.get("u_name", d.get("name","")), key="arch_uname", placeholder="例如：张三")
+
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown("**💰 欠款细节**")
+        c1, c2 = st.columns(2)
+        am = c1.text_input("欠款金额(元)", value=ev_data.get("amount", d.get("amount","")), key="arch_amount", placeholder="8000")
+        dt = c2.text_input("欠款时间/期限", value=ev_data.get("date", d.get("date","")), key="arch_date", placeholder="2023年全年")
     
     # 2. AI Generation Trigger
     if st.button("🤖 智能生成告知书内容 (AI Generate)", type="primary"):

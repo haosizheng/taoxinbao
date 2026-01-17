@@ -151,25 +151,28 @@ with bottom():
     # CSS for Nav
     nav_css = """
     <style>
+        body { margin: 0; padding: 0; background: white; overflow: hidden; }
         .nav-container {
             display: flex;
             justify-content: space-around;
             align-items: center;
             background: white;
-            padding: 4px 0; /* Tightened from 8px */
-            border-top: none; 
+            padding-top: 8px;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid #F1F3F5; 
             width: 100%;
+            height: auto;
         }
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Center vertically */
+            justify-content: center;
             text-decoration: none;
             cursor: pointer;
             width: 33%;
             -webkit-tap-highlight-color: transparent;
-            transition: color 0.2s;
+            transition: all 0.2s;
         }
         .nav-icon {
             margin-bottom: 2px;

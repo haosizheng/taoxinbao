@@ -91,11 +91,23 @@ def inject_custom_css():
             }
             
             /* ... omitted center bottom ... */
+            /* ... omitted center bottom ... */
+            div[data-testid="stBottom"] {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                z-index: 999999; /* Highest priority */
+                background-color: white; /* Ensure non-transparent */
+            }
+            
             div[data-testid="stBottom"] > div {
                 max-width: 500px;
                 margin: 0 auto;
                 left: 50% !important;
                 transform: translateX(-50%) !important;
+                padding-bottom: 20px; /* Safe area for modern phones */
             }
 
             /* 4. Card Style for Containers (Native st.container(border=True)) */
@@ -379,3 +391,24 @@ def generate_case_brief_pdf(content, images=None, filename="case_brief.pdf"):
 
 # Expose constants for APP
 LAWYER_SYSTEM_PROMPT_TEMPLATE = PROMPTS.get("lawyer_system_template", "")
+
+import time
+
+def force_scroll_to_top():
+    """
+    Inject JS to force scroll to top. 
+    Use a unique key or specific timestamp to ensure re-execution.
+    """
+    js = f"""
+    <script>
+        // Force scroll top for both body and main streamlit container
+        window.scrollTo(0,0);
+        var main = window.parent.document.querySelector('.main');
+        if (main) {{ main.scrollTop = 0; }}
+        
+        var docs = window.parent.document.querySelectorAll('[data-testid="stAppViewContainer"]');
+        if (docs && docs.length > 0) {{ docs[0].scrollTop = 0; }}
+    </script>
+    <div style="display:none;" id="scroll-marker-{int(time.time()*1000)}"></div>
+    """
+    st.components.v1.html(js, height=0)

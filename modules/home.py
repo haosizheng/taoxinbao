@@ -50,7 +50,7 @@ def render():
 
     # 4. Start New Case Button (Large, Red)
     st.markdown("<br>", unsafe_allow_html=True) # Spacing
-    if st.button("建立维权档案", type="primary", use_container_width=True):
+    if st.button("新建维权档案", type="primary", use_container_width=True):
         st.session_state.app_mode = "WIZARD"
         st.session_state.wizard_step = 1
         st.session_state.temp_dossier = {}

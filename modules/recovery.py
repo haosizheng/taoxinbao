@@ -121,5 +121,6 @@ def render():
             st.session_state.active_case_id = active_case['id']
             st.session_state.app_mode = "WORKSPACE"
             st.session_state.workspace_view = target_view
+            st.session_state.force_scroll_top = True
             
             st.rerun()

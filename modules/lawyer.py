@@ -60,13 +60,13 @@ def render(case, token):
                  
                 pdf_path = utils.generate_case_brief_pdf(brief_content, images=img_paths)
                  
-                 with open(pdf_path, "rb") as f:
-                     st.download_button(
-                         "点击保存文件",
-                         data=f,
-                         file_name=f"案件摘要_{d['name']}.pdf",
-                         mime="application/pdf"
-                     )
+                with open(pdf_path, "rb") as f:
+                    st.download_button(
+                        "点击保存文件",
+                        data=f,
+                        file_name=f"案件摘要_{d['name']}.pdf",
+                        mime="application/pdf"
+                    )
 
     st.markdown("---")
 

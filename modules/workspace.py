@@ -1,4 +1,5 @@
 import streamlit as st
+import utils
 import streamlit_antd_components as sac
 import modules.negotiator as negotiator
 import modules.archivist as archivist
@@ -7,6 +8,11 @@ import modules.profile as profile
 
 def render(case, token):
     with st.container(border=True):
+        # Auto-Scroll Logic: Triggered once upon entry
+        if st.session_state.get("force_scroll_top", False):
+            utils.force_scroll_to_top()
+            st.session_state.force_scroll_top = False
+
         # Header Badge
         # Custom Back Button Header
         c_back, c_title = st.columns([1, 4])

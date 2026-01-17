@@ -5,6 +5,74 @@ from openai import OpenAI
 from fpdf import FPDF
 import streamlit as st
 
+def inject_custom_css():
+    st.markdown("""
+        <style>
+            /* 1. Global Reset & Fonts */
+            .stApp {
+                background-color: #F5F7FA; /* Light Grey Background */
+                color: #333333; /* Force Dark Text */
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            }
+            
+            /* 2. Hide Streamlit Branding */
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;} 
+            
+            /* 3. Mobile Viewport Optimization */
+            .block-container {
+                padding-top: 2rem !important;
+                padding-bottom: 5rem !important; /* Space for bottom nav */
+                max-width: 100% !important;
+            }
+
+            /* 4. Card Style for Containers (Native st.container(border=True)) */
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                background-color: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+                border: 1px solid #F0F0F0;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            div[data-testid="stVerticalBlockBorderWrapper"] > div {
+                 /* Fix internal padding if needed */
+            }
+
+            /* 5. Input Fields Styling */
+            .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+                border-radius: 12px !important;
+                border: 1px solid #E0E0E0;
+            }
+            
+            /* 6. Button Styling */
+            .stButton button {
+                border-radius: 12px;
+                height: 3rem;
+                font-weight: 600;
+            }
+
+            /* 7. Tabs Styling */
+            .stTabs [data-baseweb="tab-list"] {
+                gap: 1rem;
+                background-color: transparent;
+            }
+            .stTabs [data-baseweb="tab"] {
+                background-color: white;
+                border-radius: 8px;
+                padding: 0.5rem 1rem;
+                border: 1px solid #eee;
+            }
+            .stTabs [aria-selected="true"] {
+                background-color: #FF4B4B !important;
+                color: white !important;
+                border: none;
+            }
+
+        </style>
+    """, unsafe_allow_html=True)
+
 # Load Prompts
 try:
     with open("prompts.json", "r", encoding="utf-8") as f:

@@ -1,6 +1,8 @@
 streamlit>=1.31.0
 openai>=1.0.0
 fpdf2>=2.7.0
-pandas>=2.0.0
+
 # dashscope removed in favor of openai SDK for ModelScope Inference
 # torch  <-- We avoid specifying torch here to prevent conflict with pre-installed version on ModelScope
+
+streamlit-antd-components>=0.3.0

@@ -1,0 +1,51 @@
+[
+    {
+        "step": 1,
+        "title": "1. 您的称呼",
+        "caption": "咱们怎么称呼您合适？",
+        "label": "姓名/大哥/大姐",
+        "key": "wiz_name",
+        "required_msg": "这就填个称呼，好说话~"
+    },
+    {
+        "step": 2,
+        "title": "2. 您干啥活儿的",
+        "caption": "您平时主要干什么工作？(比如：送外卖、跑快递、工地干活)",
+        "label": "岗位名称",
+        "key": "wiz_job",
+        "required_msg": "填个工种，方便咱分析情况"
+    },
+    {
+        "step": 3,
+        "title": "3. 在哪儿干活",
+        "caption": "平时干活的地方叫啥名字？(大概位置也行)",
+        "label": "工作地点/工地名字",
+        "key": "wiz_place",
+        "required_msg": ""
+    },
+    {
+        "step": 4,
+        "title": "4. 欠了多少血汗钱",
+        "caption": "老板/公司叫啥？一共欠了您多少钱？",
+        "inputs": [
+            {
+                "label": "老板/公司叫啥",
+                "key": "wiz_boss"
+            },
+            {
+                "label": "欠了多少(元)",
+                "key": "wiz_amt"
+            }
+        ],
+        "required_msg": "这可是关键，得填清楚喽"
+    },
+    {
+        "step": 5,
+        "title": "5. 干了多久啦",
+        "caption": "您在这儿干了多久啦？(是从啥时候开始欠的)",
+        "label": "起止时间/欠薪时间",
+        "key": "wiz_date",
+        "placeholder": "例如：去年年底到现在",
+        "is_final": true
+    }
+]

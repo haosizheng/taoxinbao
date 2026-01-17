@@ -29,23 +29,68 @@ def inject_custom_css():
                 padding-bottom: 90px !important; /* Space for fixed bottom sac nav */
                 max-width: 500px !important; /* Force Mobile Width */
                 margin: auto;
-                background-color: white; /* Card effect */
+                background-color: transparent; /* Transparent to show body grey */
                 min-height: 100vh;
-                /* overflow: hidden !important; REMOVED to allow sticky header */
             }
             
-            /* Sticky Header */
-            .sticky-header {
-                position: sticky;
+            /* Fixed Navbar */
+            .custom-navbar {
+                position: fixed;
                 top: 0;
+                left: 0;
+                width: 100%;
+                height: 50px;
                 background-color: white;
-                z-index: 1000;
-                padding-top: 10px;
-                padding-bottom: 5px;
-                margin-top: -2rem; /* Streamlit padding compensation */
+                z-index: 999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                font-weight: 600;
+                font-size: 16px;
+                color: #333;
             }
             
-            /* Center the Fixed Bottom Container */
+            /* Adjust content to avoid overlap */
+            .block-container {
+                padding-top: 60px !important; /* Navbar height + padding */
+                padding-bottom: 90px !important; 
+                max-width: 500px !important;
+                margin: auto;
+                background-color: transparent;
+                min-height: 100vh;
+            }
+            
+            /* Marquee Effect for Header */
+            .marquee-container {
+                width: 100%;
+                overflow: hidden;
+                white-space: nowrap;
+                box-sizing: border-box;
+                text-align: center; /* Default center if not overflowing */
+            }
+            
+            .marquee-text {
+                display: inline-block;
+                padding-left: 0;
+                animation: marquee 10s linear infinite;
+            }
+            
+            /* Only animate if class "animate" is applied or always? 
+               Note: Hard to detect overflow in pure CSS without JS. 
+               We will apply animation conditionally via Python logic if len > X.
+            */
+            @keyframes marquee {
+                0%   { transform: translate(0, 0); }
+                100% { transform: translate(-100%, 0); }
+            }
+            
+            /* Variant: Scrolling back and forth might be better */
+            .scroll-text {
+                /* Simple implementation */
+            }
+            
+            /* ... omitted center bottom ... */
             div[data-testid="stBottom"] > div {
                 max-width: 500px;
                 margin: 0 auto;
@@ -56,14 +101,11 @@ def inject_custom_css():
             /* 4. Card Style for Containers (Native st.container(border=True)) */
             div[data-testid="stVerticalBlockBorderWrapper"] {
                 background-color: white;
-                border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-                border: 1px solid #F0F0F0;
-                padding: 1rem;
-                margin-bottom: 1rem;
-            }
-            div[data-testid="stVerticalBlockBorderWrapper"] > div {
-                 /* Fix internal padding if needed */
+                border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.04); /* Soft shadow */
+                border: 1px solid rgba(0,0,0,0.03); /* Very subtle border */
+                padding: 1.2rem;
+                margin-bottom: 1.2rem;
             }
 
             /* 5. Input Fields Styling */
@@ -276,9 +318,11 @@ def call_qwen_vl(image_paths, prompt_text=None, api_key=None):
     except Exception as e:
         return f"VL API Error: {str(e)}"
 
-def generate_pdf(data, filename="evidence.pdf"):
+def generate_pdf(data, filename="evidence.pdf", content=None):
     """
     Generate PDF using specific Chinese font.
+    If 'content' is provided, use it directly.
+    Otherwise, fallback to template using 'data'.
     """
     pdf = FPDF()
     pdf.add_page()
@@ -294,17 +338,23 @@ def generate_pdf(data, filename="evidence.pdf"):
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, "Error: Chinese font not found. Displaying fallback text.", 0, 1)
 
-    # Use template from prompts.json
-    template = PROMPTS.get("pdf_template_text", "Notice to Pay: {amount}")
-    
-    try:
-        # Basic validation to avoid KeyError
-        safe_data = {k: data.get(k, 'N/A') for k in ['debtor', 'u_name', 'amount', 'date']}
-        content = template.format(**safe_data)
-        
-        pdf.multi_cell(0, 10, content)
-    except Exception as e:
-        pdf.cell(0, 10, f"Error generating content: {e}", 0, 1)
+    # Content Logic
+    if content:
+        # Use full AI generated text
+        try:
+            pdf.multi_cell(0, 10, content)
+        except Exception as e:
+            pdf.cell(0, 10, f"Error rendering content: {e}", 0, 1)
+    else:
+        # Legacy: Use template from prompts.json
+        template = PROMPTS.get("pdf_template_text", "Notice to Pay: {amount}")
+        try:
+            # Basic validation to avoid KeyError
+            safe_data = {k: data.get(k, 'N/A') for k in ['debtor', 'u_name', 'amount', 'date']}
+            text = template.format(**safe_data)
+            pdf.multi_cell(0, 10, text)
+        except Exception as e:
+            pdf.cell(0, 10, f"Error generating content: {e}", 0, 1)
 
     pdf.output(filename)
     return filename

@@ -21,10 +21,36 @@ def inject_custom_css():
             header {visibility: hidden;} 
             
             /* 3. Mobile Viewport Optimization */
+            ::-webkit-scrollbar {
+                display: none;
+            }
             .block-container {
                 padding-top: 2rem !important;
-                padding-bottom: 90px !important; /* Space for fixed bottom sac nav (approx 60-80px) */
-                max-width: 100% !important;
+                padding-bottom: 90px !important; /* Space for fixed bottom sac nav */
+                max-width: 500px !important; /* Force Mobile Width */
+                margin: auto;
+                background-color: white; /* Card effect */
+                min-height: 100vh;
+                /* overflow: hidden !important; REMOVED to allow sticky header */
+            }
+            
+            /* Sticky Header */
+            .sticky-header {
+                position: sticky;
+                top: 0;
+                background-color: white;
+                z-index: 1000;
+                padding-top: 10px;
+                padding-bottom: 5px;
+                margin-top: -2rem; /* Streamlit padding compensation */
+            }
+            
+            /* Center the Fixed Bottom Container */
+            div[data-testid="stBottom"] > div {
+                max-width: 500px;
+                margin: 0 auto;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
             }
 
             /* 4. Card Style for Containers (Native st.container(border=True)) */

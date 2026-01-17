@@ -11,7 +11,7 @@ import modules.profile as profile
 st.set_page_config(
     page_title="Salary Shield 薪盾",
     page_icon="🛡️",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 

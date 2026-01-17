@@ -108,6 +108,10 @@ with content_placeholder:
         token = get_api_token()
         profile.render(None, token)
 
+
+# Force Spacer at the bottom to ensure scroll passes fixed nav
+st.markdown("<div style='height: 150px; visibility: hidden;'>Spacer</div>", unsafe_allow_html=True)
+
 # --- Navigation Component (Fixed Bottom) ---
 from streamlit_extras.bottom_container import bottom
 from st_click_detector import click_detector

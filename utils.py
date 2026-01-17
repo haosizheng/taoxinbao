@@ -12,6 +12,9 @@ def inject_custom_css():
             .stApp {
                 background-color: #e0e0e0; /* Desktop Background: Neural Grey */
                 background-image: linear-gradient(#e0e0e0, #cfcfcf);
+                background-attachment: fixed; /* Fix background during scroll */
+                background-repeat: no-repeat;
+                background-size: cover;
                 color: #333333;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             }
@@ -28,13 +31,18 @@ def inject_custom_css():
             
             .block-container {
                 max-width: 500px !important;
-                padding-top: 20px !important; /* Navbar height */
-                padding-bottom: 120px !important; /* Bottom Nav height */
+                padding-top: 20px !important;
+                padding-bottom: 120px !important;
                 margin: 0 auto !important;
                 
                 /* Phone Screen Look */
                 background-color: #F5F7FA;
+                position: relative;
+                display: block;
+                flex: 1 0 auto;
                 min-height: 100vh;
+                height: auto !important;
+                overflow: visible !important;
                 box-shadow: 0 0 30px rgba(0,0,0,0.1); 
             }
             

@@ -4,6 +4,12 @@ import base64
 from openai import OpenAI
 from fpdf import FPDF
 import streamlit as st
+import io
+import time
+import requests
+from pydub import AudioSegment
+import dashscope
+from dashscope.audio.asr import Transcription
 
 def inject_custom_css():
     st.markdown("""
@@ -235,6 +241,60 @@ def call_qwen_max(prompt, system_prompt=None, api_key=None):
         return completion.choices[0].message.content
     except Exception as e:
         return f"API Error: {str(e)}"
+
+def transcribe_audio_dashscope(audio_bytes):
+    """
+    Transcribe audio bytes using DashScope SenseVoice model.
+    This replaces the previous NLS Token-based ASR.
+    Supports local bytes processing.
+    """
+    # Prefer DASHSCOPE_API_KEY, fallback to MODELSCOPE_ACCESS_TOKEN
+    api_key = os.getenv("DASHSCOPE_API_KEY") or st.secrets.get("DASHSCOPE_API_KEY") or os.getenv("MODELSCOPE_ACCESS_TOKEN") or load_local_token()
+    
+    if not api_key:
+        return "Error: DASHSCOPE_API_KEY not found."
+
+    dashscope.api_key = api_key
+    
+    # 1. Normalize Audio (SenseVoice is robust, but 16kHz WAV is standard)
+    try:
+        audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
+        audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+        out_buf = io.BytesIO()
+        audio.export(out_buf, format="wav")
+        processed_data = out_buf.getvalue()
+    except Exception as e:
+        return f"Audio Processing Error: {e}"
+
+    # 2. Call SenseVoice (Non-streaming for simplicity in this demo)
+    try:
+        # Save temp file for DashScope local file upload support
+        temp_filename = f"temp_voice_{int(time.time())}.wav"
+        with open(temp_filename, "wb") as f:
+            f.write(processed_data)
+        
+        task_response = dashscope.audio.asr.Transcription.call(
+            model='sensevoice-v1',
+            file_urls=[f"file://{os.path.abspath(temp_filename)}"],
+            language_hints=['zh', 'en']
+        )
+        
+        # Cleanup
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+            
+        if task_response.status_code == 200:
+            # SenseVoice returns a list of results
+            results = task_response.output.get('results', [])
+            if results:
+                # Get the transcription from the first file
+                return results[0].get('transcription', "")
+            return "Error: No transcription result found."
+        else:
+            return f"ASR Error: {task_response.message}"
+            
+    except Exception as e:
+        return f"ASR Request Error: {e}"
 
 def call_qwen_vl(image_paths, prompt_text=None, api_key=None):
     """

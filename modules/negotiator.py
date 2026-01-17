@@ -41,11 +41,17 @@ def render(case, token):
         input_type = st.radio("input_mode", ["🎤 语音", "📝 文字"], horizontal=True, label_visibility="collapsed")
         user_txt = ""
         if input_type == "🎤 语音":
-            audio_val = st.audio_input("录音")
+            audio_val = st.audio_input("录制老板的声音或您的描述")
             if audio_val:
-                st.warning("⚠️ 模拟语音识别...")
-                user_txt = "老板说还没钱，让我等等。"
-                st.success(f"识别：{user_txt}")
+                with st.spinner("老张正在听..."):
+                    audio_bytes = audio_val.read()
+                    user_txt = utils.transcribe_audio_dashscope(audio_bytes)
+                
+                if user_txt.startswith("Error") or user_txt.startswith("ASR Error"):
+                    st.error(user_txt)
+                    user_txt = "" # Reset if error
+                else:
+                    st.success(f"老张听懂了：\"{user_txt}\"")
         else:
             user_txt = st.text_area("老板怎么说？", height=100, placeholder="例如：过两天肯定给你...")
             

@@ -98,7 +98,9 @@ elif page == "2. 证据 & 告知书 (Archivist)":
         st.session_state.evidence_data = {}
         
     if uploaded_files:
-        st.image(uploaded_files, caption="已上传证据", width=150)
+        # Fix: Create a list of captions equal to the number of images
+        captions = [f"证据 {i+1}" for i in range(len(uploaded_files))]
+        st.image(uploaded_files, caption=captions, width=150)
         
         if st.button("🔍 AI 智能提取要素"):
             if not api_key:
@@ -158,23 +160,24 @@ elif page == "2. 证据 & 告知书 (Archivist)":
         u_name = col2.text_input("您的称呼", value=st.session_state.evidence_data.get("u_name", ""))
         
         submitted = st.form_submit_button("📄 生成《限期支付告知书》")
-        if submitted:
-            import utils
-            data = {"debtor": debtor, "amount": amount, "date": date, "u_name": u_name, "current_date": "2024-01-17"}
-            pdf_file = utils.generate_pdf(data)
-            
-            with open(pdf_file, "rb") as f:
-                st.download_button(
-                    label="⬇️ 下载告知书 PDF",
-                    data=f,
-                    file_name="限期支付告知书.pdf",
-                    mime="application/pdf"
-                )
-            st.success("告知书已生成！您可以下载发送给老板。")
-            
-            # Save to global case file (mock)
-            st.session_state['case_file'] = data
-            st.session_state['case_file']['evidence_summary'] = f"Uploaded {len(uploaded_files) if uploaded_files else 0} images."
+    
+    if submitted:
+        import utils
+        data = {"debtor": debtor, "amount": amount, "date": date, "u_name": u_name, "current_date": "2024-01-17"}
+        pdf_file = utils.generate_pdf(data)
+        
+        with open(pdf_file, "rb") as f:
+            st.download_button(
+                label="⬇️ 下载告知书 PDF",
+                data=f,
+                file_name="限期支付告知书.pdf",
+                mime="application/pdf"
+            )
+        st.success("告知书已生成！您可以下载发送给老板。")
+        
+        # Save to global case file (mock)
+        st.session_state['case_file'] = data
+        st.session_state['case_file']['evidence_summary'] = f"Uploaded {len(uploaded_files) if uploaded_files else 0} images."
 
 elif page == "3. 公益导航 & 律师 (Lighthouse)":
     st.header("⚖️ 公益导航与模拟律师")

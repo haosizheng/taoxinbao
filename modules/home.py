@@ -88,34 +88,116 @@ def render():
         "出公函": "生成告知书",
         "找援助": "律师顾问"
     }
-
-    # Use native columns for interaction
-    col1, col2 = st.columns(2)
     
-    for i, feat in enumerate(features):
-        target_col = col1 if i % 2 == 0 else col2
-        with target_col:
-            # Button Text: Icon + Title + Newline + Sub
-            # Note: Streamlit buttons support minimal styling. We rely on the text content.
-            btn_label = f"{feat['icon']} {feat['title']}\n{feat['sub']}"
+    # Create 2x2 Grid using st-click-detector (Guarantees layout on mobile)
+    from st_click_detector import click_detector
+    
+    # CSS for the custom component
+    # We embed this directly to ensure it works within the component frame
+    css_styles = """
+    <style>
+        /* Global Reset for this component */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            padding: 2px; /* Prevent shadow clip */
+        }
+        .card-link {
+            display: block;
+            background-color: #D9534F;
+            border-radius: 12px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: white !important; /* Force white for all states */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background-color 0.1s;
+            height: 100%; /* Ensure equal height */
+            width: 100%;
+        }
+        .card-link:visited, .card-link:hover, .card-link:active, .card-link:focus {
+            color: white !important;
+            text-decoration: none;
+        }
+        .card-link:active {
+            transform: scale(0.96);
+            background-color: #C9302C;
+        }
+        .card-content {
+            display: flex;
+            align-items: center;
+        }
+        .card-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .text-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+        .card-sub {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+    </style>
+    """
+    
+    html_content = f'{css_styles}<div class="grid-container">'
+    
+    for feat in features:
+        # Use title as ID
+        html_content += f"""
+        <a href='#' id='{feat['title']}' class='card-link'>
+            <div class='card-content'>
+                <span class='card-icon'>{feat['icon']}</span>
+                <div class='text-group'>
+                    <span class='card-title'>{feat['title']}</span>
+                    <span class='card-sub'>{feat['sub']}</span>
+                </div>
+            </div>
+        </a>
+        """
+    html_content += "</div>"
+    
+    # Render Click Detector
+    clicked = click_detector(html_content, key="feature_grid_click")
+    
+    # Handle Clicks
+    if clicked:
+        if not st.session_state.cases:
+            st.toast("请先建立档案 📂")
+        else:
+            # Navigation Logic
+            nav_map = {
+                "找话说": "话术咨询",
+                "存证据": "生成告知书",
+                "出公函": "生成告知书",
+                "找援助": "律师顾问"
+            }
             
-            if st.button(btn_label, key=f"feat_btn_{i}", use_container_width=True):
-                # Logic: Check for cases
-                if not st.session_state.cases:
-                    st.toast("请先建立档案 📂")
-                else:
-                    # Get most recent case (index 0)
-                    active_case = st.session_state.cases[0]
-                    target_tab = nav_map.get(feat['title'], '话术咨询')
-                    
-                    # Set Session State for Navigation
-                    st.session_state.active_case_id = active_case['id']
-                    st.session_state.app_mode = "WORKSPACE"
-                    st.session_state["main_nav_bar"] = "讨薪"
-                    
-                    # Pre-select the correct tab in Workspace
-                    # The key format in workspace.py is f"workspace_tabs_{case['id']}"
-                    tab_key = f"workspace_tabs_{active_case['id']}"
-                    st.session_state[tab_key] = target_tab
-                    
-                    st.rerun()
+            active_case = st.session_state.cases[0]
+            target_tab = nav_map.get(clicked, '话术咨询')
+            
+            # Update Session State
+            st.session_state.active_case_id = active_case['id']
+            st.session_state.app_mode = "WORKSPACE"
+            st.session_state["main_nav_bar"] = "讨薪"
+            
+            # Pre-select Workspace Tab
+            tab_key = f"workspace_tabs_{active_case['id']}"
+            st.session_state[tab_key] = target_tab
+            
+            st.rerun()

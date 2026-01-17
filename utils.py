@@ -69,7 +69,69 @@ def inject_custom_css():
                 color: white !important;
                 border: none;
             }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Inject scoped styles for Home Page elements
+    st.markdown("""
+        <style>
+        .orange-banner {
+            background-color: #E88349;
+            color: white;
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(232, 131, 73, 0.2);
+            font-size: 0.95rem;
+        }
+        
+        .blue-info-box {
+            background-color: #E3F2FD;
+            color: #0D47A1;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #BBDEFB;
+        }
 
+        .feature-button {
+            background-color: #D9534F; /* Reddish */
+            color: white !important;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: none;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0px;
+            text-decoration: none;
+        }
+        .feature-button:hover {
+            opacity: 0.9;
+            color: white !important;
+        }
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        .feature-text {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .feature-sub {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            font-weight: normal;
+        }
+        
+        /* Grid Alignment Helper */
+        .feature-grid-col {
+            padding: 0.3rem !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 

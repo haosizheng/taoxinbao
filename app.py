@@ -49,35 +49,6 @@ def get_active_case():
 # Placeholder for content
 content_placeholder = st.container()
 
-# Navigation Component (Fixed Bottom)
-from streamlit_extras.bottom_container import bottom
-
-with bottom():
-    # Determine default index
-    default_idx = 1 if st.session_state.app_mode == "PROFILE" else 0
-
-    selected_nav = sac.tabs(
-        [
-            sac.TabsItem(label='讨薪', icon='folder-open'),
-            sac.TabsItem(label='我的', icon='person-circle'),
-        ],
-        align='center', 
-        return_index=False,
-        index=default_idx,
-        key="main_nav_bar",
-        use_container_width=True,
-        variant='outline',
-        height=60 # Make it slightly taller for touch
-    )
-
-# Logic to handle nav changes
-if selected_nav == '我的' and st.session_state.app_mode != "PROFILE":
-    st.session_state.app_mode = "PROFILE"
-    st.rerun()
-elif selected_nav == '讨薪' and st.session_state.app_mode == "PROFILE":
-    st.session_state.app_mode = "HOME"
-    st.rerun()
-
 # --- Dispatcher Logic ---
 with content_placeholder:
     mode = st.session_state.app_mode
@@ -97,3 +68,40 @@ with content_placeholder:
     elif mode == "PROFILE":
         token = get_api_token()
         profile.render(None, token)
+
+# --- Navigation Component (Fixed Bottom) ---
+from streamlit_extras.bottom_container import bottom
+
+with bottom():
+    # Determine default index
+    default_idx = 0
+    if st.session_state.app_mode == "WORKSPACE":
+        default_idx = 1
+    elif st.session_state.app_mode == "PROFILE":
+        default_idx = 2
+
+    selected_nav = sac.tabs(
+        [
+            sac.TabsItem(label='首页', icon='house'),
+            sac.TabsItem(label='讨薪', icon='folder-open'),
+            sac.TabsItem(label='我的', icon='person-circle'),
+        ],
+        align='center', 
+        return_index=False,
+        index=default_idx,
+        key="main_nav_bar",
+        use_container_width=True,
+        variant='outline',
+        height=60 # Make it slightly taller for touch
+    )
+
+# Logic to handle nav changes
+if selected_nav == '首页' and st.session_state.app_mode not in ["HOME", "WIZARD"]:
+    st.session_state.app_mode = "HOME"
+    st.rerun()
+elif selected_nav == '讨薪' and st.session_state.app_mode != "WORKSPACE":
+    st.session_state.app_mode = "WORKSPACE"
+    st.rerun()
+elif selected_nav == '我的' and st.session_state.app_mode != "PROFILE":
+    st.session_state.app_mode = "PROFILE"
+    st.rerun()

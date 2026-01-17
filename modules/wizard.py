@@ -82,9 +82,11 @@ def render():
                 new_id = create_new_case(st.session_state.temp_dossier)
                 st.session_state.active_case_id = new_id
                 st.session_state.app_mode = "WORKSPACE"
+                st.session_state["main_nav_bar"] = "讨薪" # Sync Nav
                 st.rerun()
 
     if st.button("🔙 取消", type="secondary"):
         st.session_state.active_case_id = None
         st.session_state.app_mode = "HOME"
+        st.session_state["main_nav_bar"] = "首页" # Sync Nav
         st.rerun()

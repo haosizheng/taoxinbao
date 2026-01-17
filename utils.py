@@ -16,41 +16,44 @@ def inject_custom_css():
     st.markdown("""
         <style>
             /* 1. Global Reset & Fonts */
-            /* 1. Global Reset & Fonts */
-            .stApp {
-                background-color: #F8F9FA !important; /* Synced with mobile surface */
+            html, body, [data-testid="stAppViewContainer"], .stApp {
+                background-color: #F8F9FA !important;
                 color: #333333;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 0;
             }
             
-            /* 2. Hide Streamlit Branding */
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;} 
+            /* 2. Hide Streamlit Branding Truly */
+            #MainMenu, footer, header, [data-testid="stHeader"] {
+                display: none !important;
+                height: 0 !important;
+                width: 0 !important;
+            }
             
-            /* 3. Mobile Viewport Simulation (The "Phone") */
+            /* 3. Mobile Viewport Simulation (No Scrollbar) */
             ::-webkit-scrollbar { display: none; }
             
-            /* Target all possible main containers to ensure transparency */
+            /* Target all possible main containers to ensure total transparency */
             section.main, 
-            div[data-testid="stAppViewBlockContainer"],
-            div[data-testid="stAppViewContainer"] {
+            div[data-testid="stAppViewBlockContainer"] {
                 background-color: transparent !important;
                 overflow: visible !important;
             }
 
-            /* 4. The Central "Mobile Surface" */
+            /* 4. The Central "Mobile Surface" Container */
             .block-container, div[data-testid="stMainBlockContainer"] {
                 max-width: 500px !important;
                 padding-top: 20px !important;
-                padding-bottom: 50px !important;
+                padding-bottom: 200px !important; /* Fixed bottom room */
                 padding-left: 15px !important;
                 padding-right: 15px !important;
-                background-color: #F8F9FA !important; /* Fully synced with .stApp */
+                background-color: #F8F9FA !important; /* Match root exactly */
                 min-height: 100vh !important;
-                box-shadow: 0 0 40px rgba(0,0,0,0.05);
+                box-shadow: 0 0 50px rgba(0,0,0,0.03);
                 margin: auto;
-                border: 0.5px solid rgba(0,0,0,0.1);
+                border-left: 0.5px solid rgba(0,0,0,0.03);
+                border-right: 0.5px solid rgba(0,0,0,0.03);
             }
             
             /* Fixed Top Navbar - Constrained to Phone Width */
@@ -102,7 +105,7 @@ def inject_custom_css():
                 width: 100%;
                 max-width: 500px; 
                 z-index: 999999;
-                background-color: white !important; /* Force root to white */
+                background-color: #F8F9FA !important; /* Fully synced */
                 padding: 0 !important;
                 margin: 0 !important;
             }
@@ -113,7 +116,7 @@ def inject_custom_css():
             div[data-testid="stBottom"] div {
                 padding: 0 !important;
                 margin: 0 !important;
-                background-color: white !important; /* Force all intermediate levels to white */
+                background-color: #F8F9FA !important; /* Sync background */
                 border-top: none !important;
                 gap: 0 !important;
                 overflow: visible !important;

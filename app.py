@@ -151,15 +151,15 @@ with bottom():
     # CSS for Nav
     nav_css = """
     <style>
-        body { margin: 0; padding: 0; background: white; overflow: hidden; }
+        body { margin: 0; padding: 0; background: #F8F9FA; overflow: hidden; }
         .nav-container {
             display: flex;
             justify-content: space-around;
             align-items: center;
-            background: white;
+            background: #F8F9FA;
             padding-top: 10px;
             padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
-            border-top: 1px solid #F1F3F5; 
+            border-top: none; 
             width: 100%;
             height: 100%;
             box-sizing: border-box;
@@ -208,8 +208,8 @@ with bottom():
     """
 
     # Render - Explicitly set height to avoid the bottom gap
-    # height=65 is enough for icons + text + safe area
-    clicked_nav = click_detector(html, key="bottom_nav_click_v5")
+    # height=85 is enough for icons + text + safe area
+    clicked_nav = click_detector(html, key="bottom_nav_click_v7")
 
     # Handle Navigation
     if clicked_nav == "nav_home" and not is_home:

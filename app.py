@@ -121,8 +121,8 @@ with bottom():
     curr = st.session_state.app_mode
     
     # Define Colors
-    active_color = "#E05D56"
-    inactive_color = "#999999"
+    active_color = "#E63946" # Deep red for active state
+    inactive_color = "#8E8E93" # iOS-style grey
     
     # Helper to get style
     def get_nav_style(is_active):
@@ -156,28 +156,30 @@ with bottom():
             justify-content: space-around;
             align-items: center;
             background: white;
-            padding: 0 0;
-            border-top: 1px solid #eee;
+            padding: 4px 0; /* Tightened from 8px */
+            border-top: none; 
             width: 100%;
         }
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center; /* Center vertically */
             text-decoration: none;
             cursor: pointer;
             width: 33%;
             -webkit-tap-highlight-color: transparent;
-        }
-        .nav-item:hover {
-            background-color: #f9f9f9;
-            border-radius: 8px;
+            transition: color 0.2s;
         }
         .nav-icon {
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .nav-text {
-            font-size: 12px;
+            font-size: 11px; /* Slightly smaller for iOS look */
+            line-height: 1.2;
         }
     </style>
     """

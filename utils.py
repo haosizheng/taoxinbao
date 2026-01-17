@@ -48,18 +48,18 @@ def inject_custom_css():
             .block-container {
                 max-width: 500px !important;
                 padding-top: 20px !important;
-                padding-bottom: 200px !important; /* Back to generous padding */
+                padding-bottom: 200px !important; 
                 margin: 0 auto !important;
                 
-                /* Phone Screen Look */
-                background-color: #F5F7FA;
+                /* Premium Mobile App Look */
+                background-color: #F8F9FA; /* Light Grey Background */
                 position: relative;
                 display: flex !important;
                 flex-direction: column !important;
                 min-height: 100vh !important;
                 height: auto !important;
                 overflow: visible !important;
-                box-shadow: 0 0 30px rgba(0,0,0,0.1); 
+                box-shadow: 0 0 30px rgba(0,0,0,0.05); 
             }
             
             /* Fixed Top Navbar - Constrained to Phone Width */
@@ -102,31 +102,44 @@ def inject_custom_css():
                 100% { transform: translate(-100%, 0); }
             }
             
-            /* Fixed Bottom Nav - Constrained to Phone Width */
+            /* 3. Bottom Layout & Navigation Cleanup */
             div[data-testid="stBottom"] {
-                position: fixed;
-                bottom: 0;
+                position: fixed !important;
+                bottom: 0 !important;
                 left: 50% !important;
                 transform: translateX(-50%) !important;
                 width: 100%;
-                max-width: 500px; /* Constrain */
+                max-width: 500px; 
                 z-index: 999999;
-                background-color: transparent; /* Container is transparent, child is white */
+                background-color: transparent !important;
+            }
+
+            /* Surgical strike on Streamlit internal padding */
+            div[data-testid="stBottomBlockContainer"] {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Remove padding from the vertical block inside bottom container */
+            div[data-testid="stBottom"] [data-testid="stVerticalBlock"] {
+                padding: 0 !important;
+                gap: 0 !important;
             }
             
             div[data-testid="stBottom"] > div {
-                background-color: white; /* The actual nav bar bg */
-                padding-bottom: 0px;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+                background-color: white; 
+                padding-bottom: 0px !important;
+                margin-bottom: 0px !important;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.03) !important; /* Subtler shadow */
             }
 
             /* 4. Card Style for Containers (Native st.container(border=True)) */
             div[data-testid="stVerticalBlockBorderWrapper"] {
-                background-color: white;
-                border-radius: 16px;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.04); /* Soft shadow */
-                border: 1px solid rgba(0,0,0,0.03); /* Very subtle border */
-                padding: 1.2rem;
+                background-color: white !important;
+                border-radius: 16px !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+                border: 1px solid rgba(0,0,0,0.02) !important;
+                padding: 1.5rem !important; /* Increased padding */
                 margin-bottom: 1.2rem;
             }
 

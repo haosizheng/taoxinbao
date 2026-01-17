@@ -9,6 +9,23 @@ def render(case, token):
     d = case["dossier"]
     
     st.subheader("📄 告知书")
+    
+    # Hack to translate File Uploader
+    st.markdown("""
+        <style>
+            [data-testid="stFileUploader"] section > div:first-child {
+                display: none;
+            }
+            [data-testid="stFileUploader"] section::after {
+                content: "点击或拖拽上传图片";
+                display: block;
+                padding: 1rem;
+                text-align: center;
+                color: #666;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
     uploaded = st.file_uploader("上传已有的证据截图", accept_multiple_files=True)
     if uploaded:
         st.image(uploaded, caption=[f"图{i}" for i in range(len(uploaded))], width=80)

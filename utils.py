@@ -23,7 +23,7 @@ def inject_custom_css():
             /* 3. Mobile Viewport Optimization */
             .block-container {
                 padding-top: 2rem !important;
-                padding-bottom: 5rem !important; /* Space for bottom nav */
+                padding-bottom: 90px !important; /* Space for fixed bottom sac nav (approx 60-80px) */
                 max-width: 100% !important;
             }
 

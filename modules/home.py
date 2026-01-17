@@ -4,7 +4,7 @@ import time
 from utils import load_local_token
 
 def render():
-    st.title("🛡️ 薪盾 Salary Shield")
+    st.markdown("### 讨薪宝")
     st.caption("您的个人 AI 维权顾问")
     
     # 1. New Case Button

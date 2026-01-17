@@ -46,35 +46,35 @@ def get_active_case():
     return None
 
 # --- Main Layout ---
-# Placeholder for content to ensure nav renders below or we control flow
+# Placeholder for content
 content_placeholder = st.container()
 
-# Navigation Component
-# We place this visually at the top or bottom. For "Bottom Nav", we can leave it here 
-# but Streamlit works top-down. To make it fixed, CSS is needed (which we added).
-# But functionally, we just render it.
+# Navigation Component (Fixed Bottom)
+from streamlit_extras.bottom_container import bottom
 
-# Determine default index
-default_idx = 1 if st.session_state.app_mode == "PROFILE" else 0
+with bottom():
+    # Determine default index
+    default_idx = 1 if st.session_state.app_mode == "PROFILE" else 0
 
-selected_nav = sac.tabs(
-    [
-        sac.TabsItem(label='案卷', icon='folder-open'),
-        sac.TabsItem(label='我的', icon='person-circle'),
-    ],
-    align='center', 
-    return_index=False,
-    index=default_idx,
-    key="main_nav_bar",
-    use_container_width=True,
-    variant='outline'
-)
+    selected_nav = sac.tabs(
+        [
+            sac.TabsItem(label='讨薪', icon='folder-open'),
+            sac.TabsItem(label='我的', icon='person-circle'),
+        ],
+        align='center', 
+        return_index=False,
+        index=default_idx,
+        key="main_nav_bar",
+        use_container_width=True,
+        variant='outline',
+        height=60 # Make it slightly taller for touch
+    )
 
 # Logic to handle nav changes
 if selected_nav == '我的' and st.session_state.app_mode != "PROFILE":
     st.session_state.app_mode = "PROFILE"
     st.rerun()
-elif selected_nav == '案卷' and st.session_state.app_mode == "PROFILE":
+elif selected_nav == '讨薪' and st.session_state.app_mode == "PROFILE":
     st.session_state.app_mode = "HOME"
     st.rerun()
 

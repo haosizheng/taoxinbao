@@ -20,6 +20,28 @@ def show_disclaimer():
     3. **免责条款**：用户据此采取的任何法律行动（如发送告知书、提起仲裁等），产生的后果均由用户自行承担。本平台不承担任何连带责任。
     """)
 
+@st.dialog("维权地图 - 石家庄地区")
+def show_rights_map():
+    st.markdown("""
+    **周边维权机构（模拟数据）：**
+    
+    1. **石家庄市劳动保障监察局**
+       - **地址**：长安区裕华东路99号
+       - **电话**：0311-8668XXXX
+    
+    2. **桥西区法律援助中心**
+       - **地址**：桥西区中山西路168号
+       - **电话**：0311-8703XXXX
+    
+    3. **正定县劳动争议调解中心**
+       - **地址**：正定县恒山路2号
+       - **电话**：0311-8802XXXX
+    
+    ---
+    **全国法律服务官方热线：**
+    - **电话**：[12348](tel:12348) (24小时免费法律咨询)
+    """)
+
 def render(case, token):
     u = st.session_state.user_info
     
@@ -205,6 +227,11 @@ def render(case, token):
             <span class='list-text'>使用指南</span>
             <span class='list-arrow'>&gt;</span>
         </a>
+        <a href='#' id='map' class='list-item'>
+            <span class='list-icon' style='color: #E63946;'>{utils.ICONS["map"]}</span>
+            <span class='list-text'>维权地图</span>
+            <span class='list-arrow'>&gt;</span>
+        </a>
         <a href='#' id='disclaimer' class='list-item'>
             <span class='list-icon' style='color: #E63946;'>{utils.ICONS["warning"]}</span>
             <span class='list-text'>免责声明</span>
@@ -221,6 +248,8 @@ def render(case, token):
     
     if clicked == "guide":
         show_guide()
+    elif clicked == "map":
+        show_rights_map()
     elif clicked == "disclaimer":
         show_disclaimer()
     elif clicked == "feedback":

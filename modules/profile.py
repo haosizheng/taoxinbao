@@ -290,6 +290,7 @@ def render(case, token):
     # 4. Version Footer
     st.markdown("""
     <div class="version-footer">
-        讨薪宝 v1.0.1
+        讨薪宝 v1.0.1<br>
+        *本 app 的页面设计特别针对手机布局优化，手机端（浏览器模拟）体验更好。
     </div>
     """, unsafe_allow_html=True)

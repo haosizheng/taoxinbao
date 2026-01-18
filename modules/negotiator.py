@@ -3,6 +3,71 @@ import utils
 
 import streamlit_antd_components as sac
 
+def parse_negotiator_response(text):
+    """Parses old Zhang's response into Dict structure for UI cards."""
+    import re
+    
+    analysis = ""
+    strategies = []
+    
+    # Extract Analysis (Steps 1 & 2)
+    # The prompt structure: 📌【第一步：一句话定心丸】... 🔍【第二步：一眼看穿】... 💡【第三步：三个锦囊】...
+    step1 = re.search(r"📌【第一步：一句话定心丸】(.*?)(?=🔍|$)", text, re.S)
+    step2 = re.search(r"🔍【第二步：一眼看穿】(.*?)(?=💡|$)", text, re.S)
+    
+    if step1: analysis += f"**定心丸**：{step1.group(1).strip()}\n\n"
+    if step2: analysis += f"**点套路**：{step2.group(1).strip()}"
+    
+    # Extract Strategies
+    # They look like: 1. 🍵 **讲情面**...
+    strat_parts = re.findall(r"(\d\.\s?.*?)\n(.*?)(?=\d\.\s?|$)", text, re.S)
+    for title, content in strat_parts:
+        strategies.append({
+            "title": title.strip(),
+            "content": content.strip()
+        })
+        
+    return analysis, strategies
+
+def render_ai_result(res):
+    analysis, strategies = parse_negotiator_response(res)
+    
+    # 1. Analysis Card
+    st.markdown(f"""
+    <div class="analysis-card">
+        <div class="analysis-title">👨‍🦳 老张点拨</div>
+        <div class="analysis-text">{analysis}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 2. Strategies
+    st.markdown("#### 💡 三个锦囊话术")
+    for i, s in enumerate(strategies):
+        with st.container():
+            st.markdown(f"""
+            <div class="strategy-card">
+                <div class="strategy-header">{s['title']}</div>
+                <div class="strategy-text">{s['content']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Action Row
+            col1, col2 = st.columns([2, 1])
+            with col2:
+                if st.button("一键复制话术", key=f"copy_{i}", icon=":material/content_copy:", use_container_width=True):
+                    st.components.v1.html(f"""
+                        <script>
+                        const text = `{s['content']}`;
+                        const el = document.createElement('textarea');
+                        el.value = text;
+                        document.body.appendChild(el);
+                        el.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(el);
+                        </script>
+                    """, height=0)
+                    st.toast("话术已复制，快去发给老板吧！")
+
 def render(case, token):
     d = case["dossier"]
     context_summary = f"用户身份：{d['name']}({d['job']})，地点：{d.get('place','未填')}。欠款人：{d['boss']}，金额：{d['amount']}元。"
@@ -17,51 +82,50 @@ def render(case, token):
             padding: 2px !important;
         }
         
-        /* 2. Recording Card */
-        .recording-card {
-            background-color: white;
-            border-radius: 16px;
+        /* 4. AI Response Cards */
+        .analysis-card {
+            background-color: #E3F2FD;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.02);
-            margin: 10px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            border-left: 5px solid #2196F3;
+            margin-bottom: 20px;
+        }
+        .analysis-title {
+            color: #0D47A1;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        .analysis-text {
+            color: #1565C0;
+            line-height: 1.6;
+            font-size: 1.05rem;
         }
         
-        /* 3. Floating Pill Button */
-        .pill-button-container {
-            position: fixed;
-            bottom: 90px; /* Above nav bar */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 460px; /* Screen width minus padding */
-            z-index: 1000;
-            padding: 0 20px;
-            pointer-events: none; /* Let clicks pass through except for the button */
+        .strategy-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #F1F3F5;
+            margin-bottom: 15px;
         }
-        .pill-button {
-            pointer-events: auto;
-            background-color: #E63946;
-            color: white !important;
-            border-radius: 50px;
-            padding: 16px 0;
-            text-align: center;
+        .strategy-header {
             font-weight: 700;
-            font-size: 16px;
-            box-shadow: 0 8px 24px rgba(230, 57, 70, 0.3);
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
-            width: 100%;
-            display: block;
-            text-decoration: none;
-            border: none;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .pill-button:active {
-            transform: scale(0.96);
-            background-color: #D62839;
+        .strategy-text {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #333;
+            margin-bottom: 5px;
+            background: #F8F9FA;
+            padding: 12px;
+            border-radius: 8px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -69,7 +133,7 @@ def render(case, token):
     utils.render_header_with_icon("negotiator", "话术咨询")
     st.info(f"正在对抗：{d['boss']} (欠 {d['amount']}元)")
     
-    # Mode Switcher - sac already looks fairly good, but we can wrap it
+    # Mode Switcher
     mode = sac.segmented(
         items=[
             sac.SegmentedItem(label='主动要钱', icon='megaphone'),
@@ -85,11 +149,6 @@ def render(case, token):
     if mode == "主动要钱":
         st.write("还没开口，或者想发新一轮消息？让老张帮你写。")
         
-        # Use a hidden button that is triggered by the custom pill UI or just style the button
-        # For simplicity and functionality, we use a container with a button and style it.
-        # But Streamlit buttons are hard to "pill" perfectly without st.button native quirks.
-        # We'll use the native button but style it as a pill in this specific context.
-        
         st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
         if st.button("生成主动催款话术", type="primary", use_container_width=True, key="initiate_btn"):
             if not token: st.error("请去【我的】配置 API 密钥")
@@ -98,7 +157,7 @@ def render(case, token):
                     sys_prompt = utils.PROMPTS.get("negotiator_initiate_template", "")
                     prompt = f"【背景】：{context_summary}\n请根据以上情况生成催款话术。"
                     res = utils.call_qwen_max(prompt, system_prompt=sys_prompt, api_key=token)
-                    st.write(res)
+                    render_ai_result(res)
                     
     else: # 回复拖延
         st.write("老板回消息了？把他的话贴进来，我们拆解套路。")
@@ -110,7 +169,6 @@ def render(case, token):
             audio_val = st.audio_input("点击开始说话", key="voice_input")
             
             if audio_val:
-                # Use hash to detect actual new recording
                 import hashlib
                 audio_bytes = audio_val.read()
                 current_hash = hashlib.md5(audio_bytes).hexdigest()
@@ -134,13 +192,8 @@ def render(case, token):
                 user_txt = user_txt_input
                 st.session_state.negotiator_user_txt = user_txt
 
-        # Floating Pill Button Implementation
-        # We use a trick: A hidden real button and a visible pill-styled link/div
-        # However, to avoid complexity with st.button triggers, we'll style the ACTUAL button if possible
-        # or use click_detector. Let's use click_detector for the Pill Button to maintain control.
         from st_click_detector import click_detector
         
-        # Inject CSS directly into the component to handle iframe isolation
         pill_html = f"""
         <style>
             .pill-button-container {{
@@ -177,9 +230,6 @@ def render(case, token):
         """
         clicked = click_detector(pill_html, key="pill_btn_click_v2")
         
-        # Hidden native button as fallback or for state tracking if needed
-        # But click_detector is enough.
-        
         if clicked == "analyze_trigger":
             if not token: st.error("请去【我的】配置 API 密钥")
             elif not user_txt: st.toast("请输入或录入内容")
@@ -188,6 +238,6 @@ def render(case, token):
                     sys_prompt = utils.PROMPTS.get("negotiator_system", "")
                     prompt = f"【背景】：{context_summary}\n【对方回复】：{user_txt}\n请分析对方心理并给出回击。"
                     res = utils.call_qwen_max(prompt, system_prompt=sys_prompt, api_key=token)
-                    st.write(res)
+                    render_ai_result(res)
                     # Add spacer to ensure results are visible above floating button
                     st.markdown("<div style='height: 120px;'></div>", unsafe_allow_html=True)

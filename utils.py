@@ -1,4 +1,5 @@
 import os
+from pydub import AudioSegment
 import json
 import base64
 from openai import OpenAI
@@ -7,6 +8,7 @@ import streamlit as st
 import io
 import time
 import requests
+from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
 
 # --- UI CONSTANTS ---

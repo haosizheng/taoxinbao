@@ -1,4 +1,4 @@
-<img width="1190/2" height="1684/2" alt="image" src="https://github.com/user-attachments/assets/3c0b59a6-b251-4ad4-a762-8fb2e59c32f0" />
+<img width="595" height="842" alt="image" src="https://github.com/user-attachments/assets/3c0b59a6-b251-4ad4-a762-8fb2e59c32f0" />
 
 # 讨薪宝
 

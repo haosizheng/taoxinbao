@@ -1,11 +1,12 @@
+import os
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
 import json
 
 def get_token(region):
     print(f"--- Attempting Token in {region} ---")
-    ak_id = "YOUR_ALIBABA_CLOUD_ACCESS_KEY_ID"
-    ak_secret = "YOUR_ALIBABA_CLOUD_ACCESS_KEY_SECRET"
+    ak_id = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID")
+    ak_secret = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
     
     client = AcsClient(ak_id, ak_secret, region)
     request = CommonRequest()

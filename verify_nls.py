@@ -1,9 +1,10 @@
+import os
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
 def test_tingwu_api():
     print(f"--- Testing Tingwu API (Beijing) ---")
-    ak_id = "YOUR_ALIBABA_CLOUD_ACCESS_KEY_ID"
-    ak_secret = "YOUR_ALIBABA_CLOUD_ACCESS_KEY_SECRET"
+    ak_id = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID")
+    ak_secret = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
     
     from aliyunsdkcore.auth.credentials import AccessKeyCredential
     credentials = AccessKeyCredential(ak_id, ak_secret)
